@@ -1,8 +1,9 @@
 # See
+[中文](./README_CN.md)
 ## Incroduction
 - The purpose of creating this assistant app is to aid children's learning, particularly those with attention deficit. 
-- It assists them in solving learning difficulties by providing appropriate reminders when they are distracted and more. 
-- Additionally, it can function as a regular AI assistant or ChatGPT client. 
+	- It assists them in solving learning difficulties by providing appropriate reminders when they are distracted and more. 
+	- Additionally, it can function as a regular AI assistant or ChatGPT client. 
 - The app is developed using Flutter and may be suitable for desktop and web platforms, although its primary focus is on mobile platforms (Android/IOS). 
 	- Please note that Google's ML Kit is only available for Android/iOS. 
 - Kindly refer to the usage case below.
@@ -30,7 +31,7 @@ https://github.com/see2023/see_proxy
 `
 cp ./lib/data/constants.dart.example ./lib/data/constants.dart
 `
-* Or download the release version
+* Or download the [release version](https://github.com/see2023/see_me_now/releases)
 
 
 ### Tips
@@ -46,7 +47,9 @@ cp ./lib/data/constants.dart.example ./lib/data/constants.dart
 		- Enabled: Single tap or double tap the message to play the voice from Azure TTS, and show 3d avatar animation.
 - See Proxy:
 	- Your own server address to proxy chatgpt and azure tts
-	- Key: Your own key setted in the server(redis), you can share it with your family or friends
+	- Key: Your own key setted in the server(redis)
+		- You can share it with your family or friends
+		- You can set the usage by key
 - Prompts setting:
 	- Select or edit your own prompts in current dialog
 	- The first one is used as the background reminder
@@ -77,7 +80,9 @@ cp ./lib/data/constants.dart.example ./lib/data/constants.dart
 - IOS and other phones/platforms
 	- Tested on Android: Kirin 990, HarmonyOS 2.0(Android 10.0), 8G RAM
 - Reduce token consumption
+	- LangChain SummaryMemory?
 - Reduce energy consumption
+	- google ml kit usually use cpu as backend...
 
 ## Thanks
 As a back-end developer in a traditional industry, this is my first attempt at developing a mobile app, which also involves a lot of AI and 3D related knowledge. 
@@ -101,7 +106,7 @@ Thanks for the support of New Bing and various projects and organizations below:
 
 
 ## DISCUSSION
-Please go to the github discussion area
+Please go to [discussion](https://github.com/see2023/see_me_now/discussions) 
 
 ## LICENSE
 Copy from the components used [license](./LICENSE)

@@ -1,0 +1,11 @@
+class SettingValueConstants{
+  static const String me = 'me';
+  static const String openai = 'chatgpt';
+  static const String seeProxyUrlPrefix = 'http://192.168.17.241:3000';
+  static const String seeProxyUser = '';
+  static const String seeProxyKey = '';
+  static const proxyUrls = [
+    'http://192.168.1.2:3000',
+    'custom'
+  ];
+}

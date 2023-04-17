@@ -7,11 +7,12 @@
 	- Please note that Google's ML Kit is only available for Android/iOS. 
 - Kindly refer to the usage case below.
 
+
 <video width="360" height="480" controls>
-    <source src="./introduce.mp4" type="video/mp4">
+    <source src="https://raw.githubusercontent.com/see2023/see_me_now/main/introduce1.mp4" type="video/mp4">
 </video>
 <video width="360" height="480" controls>
-    <source src="./response.mp4" type="video/mp4">
+    <source src="https://raw.githubusercontent.com/see2023/see_me_now/main/response1.mp4" type="video/mp4">
 </video>
 
 ## Usage 

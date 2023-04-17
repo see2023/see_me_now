@@ -8,6 +8,7 @@
 - Kindly refer to the usage case below.
 
 	- Video Demo
+		- https://youtu.be/wBN7qTzh0UM
 		- https://www.bilibili.com/video/BV1gs4y127An
 	- Image preview
 

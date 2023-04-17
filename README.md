@@ -7,13 +7,14 @@
 	- Please note that Google's ML Kit is only available for Android/iOS. 
 - Kindly refer to the usage case below.
 
+	- Video Demo
+		- https://www.bilibili.com/video/BV1gs4y127An
+	- Image preview
 
-<video width="360" height="480" controls>
-    <source src="https://raw.githubusercontent.com/see2023/see_me_now/main/introduce1.mp4" type="video/mp4">
-</video>
-<video width="360" height="480" controls>
-    <source src="https://raw.githubusercontent.com/see2023/see_me_now/main/response1.mp4" type="video/mp4">
-</video>
+<img src="./doc/info.jpeg"  height="480">
+
+
+
 
 ## Usage 
 

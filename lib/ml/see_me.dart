@@ -111,7 +111,8 @@ class SeeMe {
             'start sending visemes to webview, got ${rt.visemesText.length} visemes');
         MyApp.glbViewerStateKey.currentState!.sendVisemes(rt.visemesText);
         MyApp.homePageStateKey.currentState!.changeOpacity(false);
-        VoiceAssistant.play(rt.wavFilePath);
+        c.setReminderTxt(res.text);
+        VoiceAssistant.play(rt.wavFilePath, clearReminderTxt: true);
       }
     });
   }

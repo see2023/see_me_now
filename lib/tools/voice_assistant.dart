@@ -1,8 +1,10 @@
 // import 'dart:io';
 
+import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:see_me_now/main.dart';
+import 'package:see_me_now/ui/home_page.dart';
 
 class VoiceAssistant {
   static bool sysPlaying = false;
@@ -41,7 +43,8 @@ class VoiceAssistant {
     });
   }
 
-  static void play(String url, {bool deleteFile = false}) async {
+  static void play(String url,
+      {bool deleteFile = false, bool clearReminderTxt = false}) async {
     try {
       if (playing) {
         Log.log.fine('stop last play');
@@ -51,8 +54,13 @@ class VoiceAssistant {
       playing = true;
       await player.setUrl(url);
       await player.play();
+      await player.stop();
       playing = false;
       Log.log.fine('await play finished: $url');
+      if (clearReminderTxt) {
+        final HomeController c = Get.put(HomeController());
+        c.setReminderTxt('');
+      }
       // MyApp.homePageStateKey.currentState!.changeOpacity(true);
       // if (deleteFile && url.startsWith('file://')) {
       //   // delete local temp file

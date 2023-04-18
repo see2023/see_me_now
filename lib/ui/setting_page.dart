@@ -44,6 +44,7 @@ class SettingWidget extends StatefulWidget {
 class _SettingWidgetState extends State<SettingWidget> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _customUrlVisible = false;
+  bool _aiReplyVisible = false;
   String _proxyUrl = '';
 
   @override
@@ -53,6 +54,9 @@ class _SettingWidgetState extends State<SettingWidget> {
         .firstWhere((element) => element == _proxyUrl, orElse: () => 'custom');
     if (initItem == 'custom') {
       _customUrlVisible = true;
+    }
+    if (DB.setting.enableCamera) {
+      _aiReplyVisible = true;
     }
     String userAndKey = '${DB.seeProxy.user}-';
     userAndKey +=
@@ -75,12 +79,28 @@ class _SettingWidgetState extends State<SettingWidget> {
                     Log.log.fine('changing enableCamera: $value');
                     DB.setting.changeSetting(SettingKeyConstants.enableCamera,
                         value ? 'true' : 'false');
+                    if (!value) {
+                      // disable AI reply button below when camera is disabled
+                      // disable enableAIReplyFromCamera button
+                      setState(() {
+                        _aiReplyVisible = false;
+                      });
+
+                      // save setting
+                      DB.setting.changeSetting(
+                          SettingKeyConstants.enableAIReplyFromCamera, 'false');
+                    } else {
+                      setState(() {
+                        _aiReplyVisible = true;
+                      });
+                    }
                   },
                 ),
                 CardSettingsSwitch(
                   key: const Key('enableAIReplyFromCamera'),
                   label: 'AI Reply',
                   initialValue: DB.setting.enableAIReplyFromCamera,
+                  visible: _aiReplyVisible,
                   onChanged: (value) {
                     Log.log.fine('changing enableAIReplyFromCamera: $value');
                     DB.setting.changeSetting(

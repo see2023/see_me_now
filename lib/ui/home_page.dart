@@ -19,6 +19,14 @@ class HomeController extends GetxController {
     Log.log.fine('in HomeController, topicId changed to $value');
     MyApp.refreshHome();
   }
+
+  String reminderTxt = '';
+  void setReminderTxt(String value) {
+    Log.log.info('in HomeController, reminderTxt changed to $value');
+    reminderTxt = value;
+    MyApp.refreshHome();
+    // update();
+  }
 }
 
 class HomePage extends StatefulWidget {
@@ -154,6 +162,20 @@ class HomePageState extends State<HomePage>
                     ? const ExtensibleTopicList()
                     : ChatWidget(chatId: controller.topicId),
               ),
+              // show reminderTxt
+              Positioned(
+                bottom: 30,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(
+                    controller.reminderTxt,
+                    style: const TextStyle(
+                        color: Color.fromARGB(204, 255, 255, 255)),
+                  ),
+                ),
+              )
             ]),
           );
         }),

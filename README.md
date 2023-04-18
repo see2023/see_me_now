@@ -1,5 +1,4 @@
 # See
-[中文](./README_CN.md)
 ## Incroduction
 - The purpose of creating this assistant app is to aid children's learning, particularly those with attention deficit. 
 	- It assists them in solving learning difficulties by providing appropriate reminders when they are distracted and more. 
@@ -10,7 +9,6 @@
 
 	- Video Demo
 		- https://youtu.be/wBN7qTzh0UM
-		- https://www.bilibili.com/video/BV1gs4y127An
 	- Image preview
 
 <img src="./doc/info.jpeg"  height="480">
@@ -20,7 +18,7 @@
 
 ## Usage 
 
-### 1 Install server
+### 1 Install your own server
 
 Refer to:
 https://github.com/see2023/see_proxy
@@ -48,7 +46,7 @@ cp ./lib/data/constants.dart.example ./lib/data/constants.dart
 - See Proxy:
 	- Your own server address to proxy chatgpt and azure tts
 	- Key: Your own key setted in the server(redis)
-		- You can share it with your family or friends
+		- You can share it with your family
 		- You can set the usage by key
 - Prompts setting:
 	- Select or edit your own prompts in current dialog

@@ -28,6 +28,7 @@ class DB {
   static late String cacheDirPath;
   static Map<int, Prompt> promptsMap = {};
   static int defaultPromptId = 0;
+  // firstPromptId: used for backgroud AI(SeeMe) chat
   static int firstPromptId = 0;
   static String getDefaultPromptName() {
     return promptsMap[DB.defaultPromptId]?.name ?? 'See';
@@ -212,7 +213,7 @@ class DB {
     int defaultPromptId = 0;
     Log.log.info('initPrompsIfEmpty() initing prompts');
     await setPrompt(0,
-        name: 'SeeMe(background use)',
+        name: 'SeeMe',
         text: '''
 You only need to watch the child in front of you and maintain a normal learning state. 
 You are given two arrays of input, which respectively record the sitting posture and exciting smile value of the child at the uniformly sampled time points in the last minute. 

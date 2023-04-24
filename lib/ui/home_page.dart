@@ -19,6 +19,8 @@ class HomeController extends GetxController {
     Log.log.fine('in HomeController, topicId changed to $value');
     MyApp.refreshHome();
   }
+  // change topicId to -1 when no input continuously for 120 seconds
+  // when topicId is -1, and task is active, show task list for 30 seconds
 
   String reminderTxt = '';
   void setReminderTxt(String value) {

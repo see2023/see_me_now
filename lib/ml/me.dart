@@ -5,6 +5,7 @@ import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:see_me_now/data/db.dart';
 import 'package:see_me_now/data/log.dart';
+import 'package:see_me_now/data/models/task.dart';
 import 'package:see_me_now/main.dart';
 import 'package:see_me_now/ml/see_me.dart';
 import 'package:see_me_now/tools/voice_assistant.dart';
@@ -61,7 +62,7 @@ enum MyStatus {
 }
 
 class Me {
-  static int maxCount = 100;
+  static int maxCount = 60;
   static const int statusChangeCount = 10 * 1000 ~/ CameraView.detectInterval;
   static List<StatData> statList = <StatData>[];
   static var cameraDataBus = Event<CameraData>();
@@ -77,9 +78,6 @@ class Me {
     Log.log.fine(
         'cameraDataBus recieveData, type: ${data.type}, lastPhase: ${data.lastPhase}');
     if (data.firstPhase) {
-      if (statList.length > maxCount) {
-        statList.removeAt(0);
-      }
       statList.add(StatData());
     }
     int dataIndex = statList.length - 1;
@@ -131,42 +129,50 @@ class Me {
       MyApp.latestStat.notify();
       if (DB.setting.enableAIReplyFromCamera) {
         silenceTalk.gotData(statList);
-        return;
+      } else {
+        notifyByRule(dataIndex);
       }
-      if (statList[dataIndex].status == MyStatus.askew) {
-        MyApp.latestStat.askewCount++;
-        if (MyApp.latestStat.askewCount == statusChangeCount) {
-          Log.log.info('change status to askew');
-          MyApp.latestStat.status = MyStatus.askew;
-        }
-        if (MyApp.latestStat.askewCount % statusChangeCount == 0) {
-          MyApp.latestStat.nobodyCount = 0;
-          MyApp.latestStat.uprightCount = 0;
-          VoiceAssistant.notifyAskew(
-              MyApp.latestStat.askewCount ~/ statusChangeCount);
-        }
-      } else if (statList[dataIndex].status == MyStatus.upright) {
-        MyApp.latestStat.uprightCount++;
-        if (MyApp.latestStat.uprightCount == statusChangeCount) {
-          Log.log.info('change status to upright');
-          MyApp.latestStat.status = MyStatus.upright;
-        }
-        if (MyApp.latestStat.uprightCount % statusChangeCount == 0) {
-          MyApp.latestStat.nobodyCount = 0;
-          MyApp.latestStat.askewCount = 0;
-          VoiceAssistant.notifyUpright(
-              MyApp.latestStat.uprightCount ~/ statusChangeCount);
-        }
-      } else if (statList[dataIndex].status == MyStatus.nobody) {
-        MyApp.latestStat.nobodyCount++;
-        if (MyApp.latestStat.nobodyCount == statusChangeCount) {
-          Log.log.info('change status to nobody');
-          MyApp.latestStat.status = MyStatus.nobody;
-        }
-        if (MyApp.latestStat.nobodyCount % statusChangeCount == 0) {
-          MyApp.latestStat.askewCount = 0;
-          MyApp.latestStat.uprightCount = 0;
-        }
+
+      if (statList.length > maxCount) {
+        saveToDB();
+      }
+    }
+  }
+
+  static notifyByRule(int dataIndex) {
+    if (statList[dataIndex].status == MyStatus.askew) {
+      MyApp.latestStat.askewCount++;
+      if (MyApp.latestStat.askewCount == statusChangeCount) {
+        Log.log.info('change status to askew');
+        MyApp.latestStat.status = MyStatus.askew;
+      }
+      if (MyApp.latestStat.askewCount % statusChangeCount == 0) {
+        MyApp.latestStat.nobodyCount = 0;
+        MyApp.latestStat.uprightCount = 0;
+        VoiceAssistant.notifyAskew(
+            MyApp.latestStat.askewCount ~/ statusChangeCount);
+      }
+    } else if (statList[dataIndex].status == MyStatus.upright) {
+      MyApp.latestStat.uprightCount++;
+      if (MyApp.latestStat.uprightCount == statusChangeCount) {
+        Log.log.info('change status to upright');
+        MyApp.latestStat.status = MyStatus.upright;
+      }
+      if (MyApp.latestStat.uprightCount % statusChangeCount == 0) {
+        MyApp.latestStat.nobodyCount = 0;
+        MyApp.latestStat.askewCount = 0;
+        VoiceAssistant.notifyUpright(
+            MyApp.latestStat.uprightCount ~/ statusChangeCount);
+      }
+    } else if (statList[dataIndex].status == MyStatus.nobody) {
+      MyApp.latestStat.nobodyCount++;
+      if (MyApp.latestStat.nobodyCount == statusChangeCount) {
+        Log.log.info('change status to nobody');
+        MyApp.latestStat.status = MyStatus.nobody;
+      }
+      if (MyApp.latestStat.nobodyCount % statusChangeCount == 0) {
+        MyApp.latestStat.askewCount = 0;
+        MyApp.latestStat.uprightCount = 0;
       }
     }
   }
@@ -214,5 +220,38 @@ class Me {
   static bool checkFaceDistracted(Face face) {
     // check if the face is distracted
     return false;
+  }
+
+  static saveToDB() async {
+    if (statList.isEmpty) return;
+    int total = statList.length;
+    double appearCount = 0;
+    double uprightCount = 0;
+    double smileTotal = 0;
+    for (var stat in statList) {
+      if (stat.status != MyStatus.nobody) {
+        ++appearCount;
+        if (stat.status == MyStatus.upright) ++uprightCount;
+        smileTotal += stat.isSmile;
+      }
+    }
+    appearCount /= total;
+    uprightCount /= total;
+    smileTotal /= total;
+    Log.log.info(
+        'MeState saveToDB : $total, $appearCount, $uprightCount, $smileTotal');
+    await DB.isar?.writeTxn(() async {
+      await DB.isar?.meStateHistorys.put(MeStateHistory()
+        ..stateKey = StateKey.appear
+        ..value = appearCount);
+      await DB.isar?.meStateHistorys.put(MeStateHistory()
+        ..stateKey = StateKey.upright
+        ..value = uprightCount);
+      await DB.isar?.meStateHistorys.put(MeStateHistory()
+        ..stateKey = StateKey.smile
+        ..value = smileTotal);
+    });
+
+    statList.clear();
   }
 }

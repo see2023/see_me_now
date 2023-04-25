@@ -6660,7 +6660,8 @@ const StatePatternSchema = Schema(
     r'stateKey': PropertySchema(
       id: 1,
       name: r'stateKey',
-      type: IsarType.long,
+      type: IsarType.byte,
+      enumMap: _StatePatternstateKeyEnumValueMap,
     )
   },
   estimateSize: _statePatternEstimateSize,
@@ -6685,7 +6686,7 @@ void _statePatternSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeBool(offsets[0], object.positive);
-  writer.writeLong(offsets[1], object.stateKey);
+  writer.writeByte(offsets[1], object.stateKey.index);
 }
 
 StatePattern _statePatternDeserialize(
@@ -6696,7 +6697,9 @@ StatePattern _statePatternDeserialize(
 ) {
   final object = StatePattern();
   object.positive = reader.readBool(offsets[0]);
-  object.stateKey = reader.readLong(offsets[1]);
+  object.stateKey =
+      _StatePatternstateKeyValueEnumMap[reader.readByteOrNull(offsets[1])] ??
+          StateKey.none;
   return object;
 }
 
@@ -6710,11 +6713,26 @@ P _statePatternDeserializeProp<P>(
     case 0:
       return (reader.readBool(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (_StatePatternstateKeyValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          StateKey.none) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
+
+const _StatePatternstateKeyEnumValueMap = {
+  'none': 0,
+  'appear': 1,
+  'upright': 2,
+  'smile': 3,
+};
+const _StatePatternstateKeyValueEnumMap = {
+  0: StateKey.none,
+  1: StateKey.appear,
+  2: StateKey.upright,
+  3: StateKey.smile,
+};
 
 extension StatePatternQueryFilter
     on QueryBuilder<StatePattern, StatePattern, QFilterCondition> {
@@ -6729,7 +6747,7 @@ extension StatePatternQueryFilter
   }
 
   QueryBuilder<StatePattern, StatePattern, QAfterFilterCondition>
-      stateKeyEqualTo(int value) {
+      stateKeyEqualTo(StateKey value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'stateKey',
@@ -6740,7 +6758,7 @@ extension StatePatternQueryFilter
 
   QueryBuilder<StatePattern, StatePattern, QAfterFilterCondition>
       stateKeyGreaterThan(
-    int value, {
+    StateKey value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -6754,7 +6772,7 @@ extension StatePatternQueryFilter
 
   QueryBuilder<StatePattern, StatePattern, QAfterFilterCondition>
       stateKeyLessThan(
-    int value, {
+    StateKey value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -6768,8 +6786,8 @@ extension StatePatternQueryFilter
 
   QueryBuilder<StatePattern, StatePattern, QAfterFilterCondition>
       stateKeyBetween(
-    int lower,
-    int upper, {
+    StateKey lower,
+    StateKey upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {

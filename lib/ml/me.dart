@@ -149,8 +149,10 @@ class Me {
       if (MyApp.latestStat.askewCount % statusChangeCount == 0) {
         MyApp.latestStat.nobodyCount = 0;
         MyApp.latestStat.uprightCount = 0;
-        VoiceAssistant.notifyAskew(
-            MyApp.latestStat.askewCount ~/ statusChangeCount);
+        if (DB.setting.enablePoseReminder) {
+          VoiceAssistant.notifyAskew(
+              MyApp.latestStat.askewCount ~/ statusChangeCount);
+        }
       }
     } else if (statList[dataIndex].status == MyStatus.upright) {
       MyApp.latestStat.uprightCount++;
@@ -161,8 +163,10 @@ class Me {
       if (MyApp.latestStat.uprightCount % statusChangeCount == 0) {
         MyApp.latestStat.nobodyCount = 0;
         MyApp.latestStat.askewCount = 0;
-        VoiceAssistant.notifyUpright(
-            MyApp.latestStat.uprightCount ~/ statusChangeCount);
+        if (DB.setting.enablePoseReminder) {
+          VoiceAssistant.notifyUpright(
+              MyApp.latestStat.uprightCount ~/ statusChangeCount);
+        }
       }
     } else if (statList[dataIndex].status == MyStatus.nobody) {
       MyApp.latestStat.nobodyCount++;

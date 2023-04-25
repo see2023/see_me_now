@@ -4,6 +4,7 @@ import 'package:see_me_now/api/see_proxy.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:see_me_now/data/models/message.dart';
 import 'package:see_me_now/data/models/prompts.dart';
+import 'package:see_me_now/data/models/task.dart';
 import 'package:see_me_now/data/models/topic.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
@@ -48,7 +49,16 @@ class DB {
       await setting.init(appDocPath);
 
       // initing local db
-      isar = await Isar.open([MessageSchema, TopicSchema, PromptSchema]);
+      isar = await Isar.open([
+        MessageSchema,
+        TopicSchema,
+        PromptSchema,
+        SeeGoalSchema,
+        SeeGoalExperiencesSchema,
+        SeeTaskSchema,
+        SeeActionSchema,
+        MeStateHistorySchema
+      ]);
       seeProxy.setParam(
           user: setting.getString(SettingKeyConstants.seeProxyUser),
           key: setting.getString(SettingKeyConstants.seeProxyKeyKey),
@@ -214,18 +224,7 @@ class DB {
     Log.log.info('initPrompsIfEmpty() initing prompts');
     await setPrompt(0,
         name: 'SeeMe',
-        text: '''
-You only need to watch the child in front of you and maintain a normal learning state. 
-You are given two arrays of input, which respectively record the sitting posture and exciting smile value of the child at the uniformly sampled time points in the last minute. 
-The value range of sitting posture is 0 or 1, where 1 represents sitting posture. 
-The value of exciting is 0 or 1, where 1 represents excitement; when in a long-term excited state, you need to let him calm down. 
-For example, if you receive {sit: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], exciting: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0]}, you need to remind the child to sit upright; 
-if the excitement is not too high, there is no need to remind. 
-If you receive {sit: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1], exciting: [1 ,1 ,1 ,1 ,1 ,1 ,0 ,1 ,1 ,1]}, 
-you need to praise the child for sitting more and more upright but being too excited and need to tell the child to calm down. 
-Next minute you will receive two arrays and then give corresponding reminders based on these two sets of data. 
-The response content should be short and easy to understand and should not exceed twenty words; encouragement is the main content and interesting. Please reply in Chinese.
-''',
+        text: 'Please reply in Chinese.',
         model: 'gpt-3.5-turbo',
         voiceName: 'zh-CN-YunxiNeural');
     defaultPromptId = await setPrompt(0,
@@ -253,7 +252,7 @@ The response content should be short and easy to understand and should not excee
         model: 'gpt-3.5-turbo',
         voiceName: 'zh-CN-XiaomengNeural');
     await setPrompt(0,
-        name: '中文改写',
+        name: '中文美化',
         text:
             '我想让你扮演一个中文老师。我会用中文和你说话，你也会用中文回答我，将我的话换一种表达方式，表达完全一样的意思，不要添加、修改内容，也不要加解释。我希望你的回复保持简洁，限制在100字以内，同时语句通顺，句意流畅，言辞优美。',
         model: 'gpt-3.5-turbo',
@@ -265,7 +264,7 @@ The response content should be short and easy to understand and should not excee
         model: 'gpt-3.5-turbo',
         voiceName: 'en-US-AriaNeural');
     await setPrompt(0,
-        name: 'English corrector',
+        name: 'English opt',
         text:
             'I want you to act as an English translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it in Short, idiomatic spoken English. I want you to only reply the correction, the improvements and nothing else, do not write explanations.',
         model: 'gpt-3.5-turbo',

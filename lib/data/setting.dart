@@ -11,6 +11,7 @@ class SettingKeyConstants {
   static const String tapPlayVoice = 'tapPlayVoice';
   static const String enableCamera = 'enableCamera';
   static const String enableAIReplyFromCamera = 'enableAIReplyFromCamera';
+  static const String enablePoseReminder = 'enablePoseReminder';
   static const String defaultPromptId = 'defaultPromptId';
 }
 
@@ -19,6 +20,7 @@ class Setting {
   bool tapPlayVoice = true;
   bool enableCamera = true;
   bool enableAIReplyFromCamera = false;
+  bool enablePoseReminder = true;
   Box? _settingsBox;
   init(String settingFilePath) async {
     Hive.init(settingFilePath);
@@ -41,6 +43,8 @@ class Setting {
         _settingsBox?.get(SettingKeyConstants.enableCamera) ?? true;
     DB.setting.enableAIReplyFromCamera =
         _settingsBox?.get(SettingKeyConstants.enableAIReplyFromCamera) ?? false;
+    DB.setting.enablePoseReminder =
+        _settingsBox?.get(SettingKeyConstants.enablePoseReminder) ?? false;
   }
 
   close() {
@@ -84,6 +88,11 @@ class Setting {
         DB.setting.enableAIReplyFromCamera = value == 'true';
         _settingsBox?.put(SettingKeyConstants.enableAIReplyFromCamera,
             DB.setting.enableAIReplyFromCamera);
+        break;
+      case SettingKeyConstants.enablePoseReminder:
+        DB.setting.enablePoseReminder = value == 'true';
+        _settingsBox?.put(SettingKeyConstants.enablePoseReminder,
+            DB.setting.enablePoseReminder);
         break;
     }
   }

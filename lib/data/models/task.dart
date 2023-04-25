@@ -25,10 +25,13 @@ enum ActionType {
   askPersonForTaskReduce,
 }
 
+enum StateKey { none, appear, upright, smile }
+
 @embedded
 class StatePattern {
   // appear, upright, smile
-  int stateKey = 0;
+  @enumerated
+  StateKey stateKey = StateKey.none;
   bool positive = true;
 }
 
@@ -114,8 +117,6 @@ class SeeAction {
   String input = '';
   String output = '';
 }
-
-enum StateKey { none, appear, upright, smile }
 
 @collection
 class MeStateHistory {

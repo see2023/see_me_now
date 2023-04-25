@@ -87,13 +87,26 @@ class SeeMe {
       Log.log.info('skip talking to ai, topicId: ${c.topicId}');
       return;
     }
+    String promptText = '''
+You only need to watch the child in front of you and maintain a normal learning state. 
+You are given two arrays of input, which respectively record the sitting posture and exciting smile value of the child at the uniformly sampled time points in the last minute. 
+The value range of sitting posture is 0 or 1, where 1 represents sitting posture. 
+The value of exciting is 0 or 1, where 1 represents excitement; when in a long-term excited state, you need to let him calm down. 
+For example, if you receive {sit: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], exciting: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0]}, you need to remind the child to sit upright; 
+if the excitement is not too high, there is no need to remind. 
+If you receive {sit: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1], exciting: [1 ,1 ,1 ,1 ,1 ,1 ,0 ,1 ,1 ,1]}, 
+you need to praise the child for sitting more and more upright but being too excited and need to tell the child to calm down. 
+Next minute you will receive two arrays and then give corresponding reminders based on these two sets of data. 
+The response content should be short and easy to understand and should not exceed twenty words; encouragement is the main content and interesting. 
+''';
+    promptText += DB.promptsMap[DB.firstPromptId]?.text ?? '';
     DB.chatGPTProxy
         .sendMessage(
             text,
             parentMessageId,
             '',
-            DB.promptsMap[DB.firstPromptId]?.name ?? '',
-            DB.promptsMap[DB.firstPromptId]?.text ?? '',
+            DB.promptsMap[DB.firstPromptId]?.model ?? '',
+            promptText,
             talkTime == 0)
         .then((ChatGPTRes res) async {
       if (res.status == false) {

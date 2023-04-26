@@ -3,6 +3,8 @@ import 'package:get/route_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:see_me_now/3d/glb_viewer.dart';
 import 'package:see_me_now/data/topics_model.dart';
+import 'package:see_me_now/messages.dart';
+import 'package:see_me_now/ml/agent/goal_mananer.dart';
 import 'package:see_me_now/ml/me.dart';
 import 'package:see_me_now/tools/voice_assistant.dart';
 import 'package:see_me_now/ui/camera_view.dart';
@@ -15,7 +17,7 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 // APP
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
   static LatestTopics latestTopics = LatestTopics();
   static AllTopics allTopics = AllTopics();
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
   static final glbViewer = GlbViewer(key: glbViewerStateKey);
   static final homePageStateKey = GlobalKey<HomePageState>();
   static final homePage = HomePage(key: homePageStateKey);
+  static final goalManager = GoalManager();
 
   static void refreshHome() {
     homePageStateKey.currentState?.refresh();
@@ -35,8 +38,25 @@ class MyApp extends StatelessWidget {
   }
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 3000), () {
+      MyApp.goalManager.initLoop();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      translations: Messages(),
+      locale: const Locale('zh', 'CN'),
+      // locale: Get.deviceLocale,
+      fallbackLocale: const Locale('en', 'US'),
       debugShowCheckedModeBanner: false,
       title: 'See',
       theme: ThemeData(
@@ -49,7 +69,7 @@ class MyApp extends StatelessWidget {
       // ),
       initialRoute: '/home',
       getPages: [
-        GetPage(name: '/home', page: () => homePage),
+        GetPage(name: '/home', page: () => MyApp.homePage),
         GetPage(name: '/setting', page: () => const SettingPage()),
         GetPage(name: '/prompts', page: () => const PromptsPage()),
         // name: '/chats/:chatId',

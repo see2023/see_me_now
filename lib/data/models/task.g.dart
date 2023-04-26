@@ -22,45 +22,40 @@ const SeeGoalSchema = CollectionSchema(
       name: r'description',
       type: IsarType.string,
     ),
-    r'experiences': PropertySchema(
-      id: 1,
-      name: r'experiences',
-      type: IsarType.stringList,
-    ),
     r'insertTime': PropertySchema(
-      id: 2,
+      id: 1,
       name: r'insertTime',
       type: IsarType.dateTime,
     ),
     r'name': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'name',
       type: IsarType.string,
     ),
     r'priority': PropertySchema(
-      id: 4,
+      id: 3,
       name: r'priority',
       type: IsarType.long,
     ),
     r'statePatterns': PropertySchema(
-      id: 5,
+      id: 4,
       name: r'statePatterns',
       type: IsarType.objectList,
       target: r'StatePattern',
     ),
     r'tasks': PropertySchema(
-      id: 6,
+      id: 5,
       name: r'tasks',
       type: IsarType.longList,
     ),
     r'type': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'type',
       type: IsarType.byte,
       enumMap: _SeeGoaltypeEnumValueMap,
     ),
     r'updateTime': PropertySchema(
-      id: 8,
+      id: 7,
       name: r'updateTime',
       type: IsarType.dateTime,
     )
@@ -70,7 +65,34 @@ const SeeGoalSchema = CollectionSchema(
   deserialize: _seeGoalDeserialize,
   deserializeProp: _seeGoalDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'priority': IndexSchema(
+      id: -6477851841645083544,
+      name: r'priority',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'priority',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'insertTime': IndexSchema(
+      id: 4224881274084417522,
+      name: r'insertTime',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'insertTime',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {r'StatePattern': StatePatternSchema},
   getId: _seeGoalGetId,
@@ -86,13 +108,6 @@ int _seeGoalEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.description.length * 3;
-  bytesCount += 3 + object.experiences.length * 3;
-  {
-    for (var i = 0; i < object.experiences.length; i++) {
-      final value = object.experiences[i];
-      bytesCount += value.length * 3;
-    }
-  }
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.statePatterns.length * 3;
   {
@@ -113,19 +128,18 @@ void _seeGoalSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.description);
-  writer.writeStringList(offsets[1], object.experiences);
-  writer.writeDateTime(offsets[2], object.insertTime);
-  writer.writeString(offsets[3], object.name);
-  writer.writeLong(offsets[4], object.priority);
+  writer.writeDateTime(offsets[1], object.insertTime);
+  writer.writeString(offsets[2], object.name);
+  writer.writeLong(offsets[3], object.priority);
   writer.writeObjectList<StatePattern>(
-    offsets[5],
+    offsets[4],
     allOffsets,
     StatePatternSchema.serialize,
     object.statePatterns,
   );
-  writer.writeLongList(offsets[6], object.tasks);
-  writer.writeByte(offsets[7], object.type.index);
-  writer.writeDateTime(offsets[8], object.updateTime);
+  writer.writeLongList(offsets[5], object.tasks);
+  writer.writeByte(offsets[6], object.type.index);
+  writer.writeDateTime(offsets[7], object.updateTime);
 }
 
 SeeGoal _seeGoalDeserialize(
@@ -136,22 +150,21 @@ SeeGoal _seeGoalDeserialize(
 ) {
   final object = SeeGoal();
   object.description = reader.readString(offsets[0]);
-  object.experiences = reader.readStringList(offsets[1]) ?? [];
   object.id = id;
-  object.insertTime = reader.readDateTime(offsets[2]);
-  object.name = reader.readString(offsets[3]);
-  object.priority = reader.readLong(offsets[4]);
+  object.insertTime = reader.readDateTime(offsets[1]);
+  object.name = reader.readString(offsets[2]);
+  object.priority = reader.readLong(offsets[3]);
   object.statePatterns = reader.readObjectList<StatePattern>(
-        offsets[5],
+        offsets[4],
         StatePatternSchema.deserialize,
         allOffsets,
         StatePattern(),
       ) ??
       [];
-  object.tasks = reader.readLongList(offsets[6]) ?? [];
-  object.type = _SeeGoaltypeValueEnumMap[reader.readByteOrNull(offsets[7])] ??
+  object.tasks = reader.readLongList(offsets[5]) ?? [];
+  object.type = _SeeGoaltypeValueEnumMap[reader.readByteOrNull(offsets[6])] ??
       GoalType.once;
-  object.updateTime = reader.readDateTime(offsets[8]);
+  object.updateTime = reader.readDateTimeOrNull(offsets[7]);
   return object;
 }
 
@@ -165,14 +178,12 @@ P _seeGoalDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readStringList(offset) ?? []) as P;
-    case 2:
       return (reader.readDateTime(offset)) as P;
-    case 3:
+    case 2:
       return (reader.readString(offset)) as P;
-    case 4:
+    case 3:
       return (reader.readLong(offset)) as P;
-    case 5:
+    case 4:
       return (reader.readObjectList<StatePattern>(
             offset,
             StatePatternSchema.deserialize,
@@ -180,13 +191,13 @@ P _seeGoalDeserializeProp<P>(
             StatePattern(),
           ) ??
           []) as P;
-    case 6:
+    case 5:
       return (reader.readLongList(offset) ?? []) as P;
-    case 7:
+    case 6:
       return (_SeeGoaltypeValueEnumMap[reader.readByteOrNull(offset)] ??
           GoalType.once) as P;
-    case 8:
-      return (reader.readDateTime(offset)) as P;
+    case 7:
+      return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -219,6 +230,22 @@ extension SeeGoalQueryWhereSort on QueryBuilder<SeeGoal, SeeGoal, QWhere> {
   QueryBuilder<SeeGoal, SeeGoal, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhere> anyPriority() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'priority'),
+      );
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhere> anyInsertTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'insertTime'),
+      );
     });
   }
 }
@@ -284,6 +311,186 @@ extension SeeGoalQueryWhere on QueryBuilder<SeeGoal, SeeGoal, QWhereClause> {
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> priorityEqualTo(
+      int priority) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'priority',
+        value: [priority],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> priorityNotEqualTo(
+      int priority) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'priority',
+              lower: [],
+              upper: [priority],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'priority',
+              lower: [priority],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'priority',
+              lower: [priority],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'priority',
+              lower: [],
+              upper: [priority],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> priorityGreaterThan(
+    int priority, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'priority',
+        lower: [priority],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> priorityLessThan(
+    int priority, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'priority',
+        lower: [],
+        upper: [priority],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> priorityBetween(
+    int lowerPriority,
+    int upperPriority, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'priority',
+        lower: [lowerPriority],
+        includeLower: includeLower,
+        upper: [upperPriority],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> insertTimeEqualTo(
+      DateTime insertTime) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'insertTime',
+        value: [insertTime],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> insertTimeNotEqualTo(
+      DateTime insertTime) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'insertTime',
+              lower: [],
+              upper: [insertTime],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'insertTime',
+              lower: [insertTime],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'insertTime',
+              lower: [insertTime],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'insertTime',
+              lower: [],
+              upper: [insertTime],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> insertTimeGreaterThan(
+    DateTime insertTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'insertTime',
+        lower: [insertTime],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> insertTimeLessThan(
+    DateTime insertTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'insertTime',
+        lower: [],
+        upper: [insertTime],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterWhereClause> insertTimeBetween(
+    DateTime lowerInsertTime,
+    DateTime upperInsertTime, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'insertTime',
+        lower: [lowerInsertTime],
+        includeLower: includeLower,
+        upper: [upperInsertTime],
         includeUpper: includeUpper,
       ));
     });
@@ -420,230 +627,6 @@ extension SeeGoalQueryFilter
         property: r'description',
         value: '',
       ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'experiences',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'experiences',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'experiences',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'experiences',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'experiences',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'experiences',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'experiences',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'experiences',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'experiences',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesElementIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'experiences',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesLengthEqualTo(int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'experiences',
-        length,
-        true,
-        length,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition> experiencesIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'experiences',
-        0,
-        true,
-        0,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'experiences',
-        0,
-        false,
-        999999,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'experiences',
-        0,
-        true,
-        length,
-        include,
-      );
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'experiences',
-        length,
-        include,
-        999999,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition>
-      experiencesLengthBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'experiences',
-        lower,
-        includeLower,
-        upper,
-        includeUpper,
-      );
     });
   }
 
@@ -1213,8 +1196,24 @@ extension SeeGoalQueryFilter
     });
   }
 
+  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition> updateTimeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'updateTime',
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition> updateTimeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'updateTime',
+      ));
+    });
+  }
+
   QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition> updateTimeEqualTo(
-      DateTime value) {
+      DateTime? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'updateTime',
@@ -1224,7 +1223,7 @@ extension SeeGoalQueryFilter
   }
 
   QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition> updateTimeGreaterThan(
-    DateTime value, {
+    DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1237,7 +1236,7 @@ extension SeeGoalQueryFilter
   }
 
   QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition> updateTimeLessThan(
-    DateTime value, {
+    DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1250,8 +1249,8 @@ extension SeeGoalQueryFilter
   }
 
   QueryBuilder<SeeGoal, SeeGoal, QAfterFilterCondition> updateTimeBetween(
-    DateTime lower,
-    DateTime upper, {
+    DateTime? lower,
+    DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -1450,12 +1449,6 @@ extension SeeGoalQueryWhereDistinct
     });
   }
 
-  QueryBuilder<SeeGoal, SeeGoal, QDistinct> distinctByExperiences() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'experiences');
-    });
-  }
-
   QueryBuilder<SeeGoal, SeeGoal, QDistinct> distinctByInsertTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'insertTime');
@@ -1508,12 +1501,6 @@ extension SeeGoalQueryProperty
     });
   }
 
-  QueryBuilder<SeeGoal, List<String>, QQueryOperations> experiencesProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'experiences');
-    });
-  }
-
   QueryBuilder<SeeGoal, DateTime, QQueryOperations> insertTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'insertTime');
@@ -1551,7 +1538,7 @@ extension SeeGoalQueryProperty
     });
   }
 
-  QueryBuilder<SeeGoal, DateTime, QQueryOperations> updateTimeProperty() {
+  QueryBuilder<SeeGoal, DateTime?, QQueryOperations> updateTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updateTime');
     });
@@ -2746,50 +2733,49 @@ const SeeTaskSchema = CollectionSchema(
   name: r'SeeTask',
   id: -3392477825759854955,
   properties: {
-    r'actions': PropertySchema(
-      id: 0,
-      name: r'actions',
-      type: IsarType.longList,
-    ),
     r'description': PropertySchema(
-      id: 1,
+      id: 0,
       name: r'description',
       type: IsarType.string,
     ),
     r'endTime': PropertySchema(
-      id: 2,
+      id: 1,
       name: r'endTime',
       type: IsarType.dateTime,
     ),
-    r'endTimeExpected': PropertySchema(
-      id: 3,
-      name: r'endTimeExpected',
-      type: IsarType.dateTime,
+    r'estimatedTimeInMinutes': PropertySchema(
+      id: 2,
+      name: r'estimatedTimeInMinutes',
+      type: IsarType.long,
     ),
     r'evaluation': PropertySchema(
-      id: 4,
+      id: 3,
       name: r'evaluation',
-      type: IsarType.object,
-      target: r'TaskEvaluation',
+      type: IsarType.string,
     ),
     r'goalId': PropertySchema(
-      id: 5,
+      id: 4,
       name: r'goalId',
       type: IsarType.long,
+    ),
+    r'insertTime': PropertySchema(
+      id: 5,
+      name: r'insertTime',
+      type: IsarType.dateTime,
     ),
     r'parentMessageId': PropertySchema(
       id: 6,
       name: r'parentMessageId',
       type: IsarType.string,
     ),
-    r'startTime': PropertySchema(
+    r'score': PropertySchema(
       id: 7,
-      name: r'startTime',
-      type: IsarType.dateTime,
+      name: r'score',
+      type: IsarType.long,
     ),
-    r'startTimeExpected': PropertySchema(
+    r'startTime': PropertySchema(
       id: 8,
-      name: r'startTimeExpected',
+      name: r'startTime',
       type: IsarType.dateTime,
     ),
     r'status': PropertySchema(
@@ -2836,14 +2822,14 @@ const SeeTaskSchema = CollectionSchema(
         )
       ],
     ),
-    r'startTimeExpected': IndexSchema(
-      id: 6884373250845406784,
-      name: r'startTimeExpected',
+    r'insertTime': IndexSchema(
+      id: 4224881274084417522,
+      name: r'insertTime',
       unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'startTimeExpected',
+          name: r'insertTime',
           type: IndexType.value,
           caseSensitive: false,
         )
@@ -2851,7 +2837,7 @@ const SeeTaskSchema = CollectionSchema(
     )
   },
   links: {},
-  embeddedSchemas: {r'TaskEvaluation': TaskEvaluationSchema},
+  embeddedSchemas: {},
   getId: _seeTaskGetId,
   getLinks: _seeTaskGetLinks,
   attach: _seeTaskAttach,
@@ -2864,11 +2850,8 @@ int _seeTaskEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.actions.length * 8;
   bytesCount += 3 + object.description.length * 3;
-  bytesCount += 3 +
-      TaskEvaluationSchema.estimateSize(
-          object.evaluation, allOffsets[TaskEvaluation]!, allOffsets);
+  bytesCount += 3 + object.evaluation.length * 3;
   bytesCount += 3 + object.parentMessageId.length * 3;
   bytesCount += 3 + object.taskDate.length * 3;
   return bytesCount;
@@ -2880,20 +2863,15 @@ void _seeTaskSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLongList(offsets[0], object.actions);
-  writer.writeString(offsets[1], object.description);
-  writer.writeDateTime(offsets[2], object.endTime);
-  writer.writeDateTime(offsets[3], object.endTimeExpected);
-  writer.writeObject<TaskEvaluation>(
-    offsets[4],
-    allOffsets,
-    TaskEvaluationSchema.serialize,
-    object.evaluation,
-  );
-  writer.writeLong(offsets[5], object.goalId);
+  writer.writeString(offsets[0], object.description);
+  writer.writeDateTime(offsets[1], object.endTime);
+  writer.writeLong(offsets[2], object.estimatedTimeInMinutes);
+  writer.writeString(offsets[3], object.evaluation);
+  writer.writeLong(offsets[4], object.goalId);
+  writer.writeDateTime(offsets[5], object.insertTime);
   writer.writeString(offsets[6], object.parentMessageId);
-  writer.writeDateTime(offsets[7], object.startTime);
-  writer.writeDateTime(offsets[8], object.startTimeExpected);
+  writer.writeLong(offsets[7], object.score);
+  writer.writeDateTime(offsets[8], object.startTime);
   writer.writeByte(offsets[9], object.status.index);
   writer.writeString(offsets[10], object.taskDate);
 }
@@ -2905,21 +2883,16 @@ SeeTask _seeTaskDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = SeeTask();
-  object.actions = reader.readLongList(offsets[0]) ?? [];
-  object.description = reader.readString(offsets[1]);
-  object.endTime = reader.readDateTimeOrNull(offsets[2]);
-  object.endTimeExpected = reader.readDateTimeOrNull(offsets[3]);
-  object.evaluation = reader.readObjectOrNull<TaskEvaluation>(
-        offsets[4],
-        TaskEvaluationSchema.deserialize,
-        allOffsets,
-      ) ??
-      TaskEvaluation();
-  object.goalId = reader.readLong(offsets[5]);
+  object.description = reader.readString(offsets[0]);
+  object.endTime = reader.readDateTimeOrNull(offsets[1]);
+  object.estimatedTimeInMinutes = reader.readLong(offsets[2]);
+  object.evaluation = reader.readString(offsets[3]);
+  object.goalId = reader.readLong(offsets[4]);
   object.id = id;
+  object.insertTime = reader.readDateTime(offsets[5]);
   object.parentMessageId = reader.readString(offsets[6]);
-  object.startTime = reader.readDateTimeOrNull(offsets[7]);
-  object.startTimeExpected = reader.readDateTime(offsets[8]);
+  object.score = reader.readLong(offsets[7]);
+  object.startTime = reader.readDateTimeOrNull(offsets[8]);
   object.status =
       _SeeTaskstatusValueEnumMap[reader.readByteOrNull(offsets[9])] ??
           TaskStatus.pending;
@@ -2935,28 +2908,23 @@ P _seeTaskDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLongList(offset) ?? []) as P;
-    case 1:
       return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 2:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 3:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 4:
-      return (reader.readObjectOrNull<TaskEvaluation>(
-            offset,
-            TaskEvaluationSchema.deserialize,
-            allOffsets,
-          ) ??
-          TaskEvaluation()) as P;
-    case 5:
       return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
+      return (reader.readDateTime(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 8:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
       return (_SeeTaskstatusValueEnumMap[reader.readByteOrNull(offset)] ??
           TaskStatus.pending) as P;
@@ -3011,10 +2979,10 @@ extension SeeTaskQueryWhereSort on QueryBuilder<SeeTask, SeeTask, QWhere> {
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterWhere> anyStartTimeExpected() {
+  QueryBuilder<SeeTask, SeeTask, QAfterWhere> anyInsertTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'startTimeExpected'),
+        const IndexWhereClause.any(indexName: r'insertTime'),
       );
     });
   }
@@ -3220,92 +3188,91 @@ extension SeeTaskQueryWhere on QueryBuilder<SeeTask, SeeTask, QWhereClause> {
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> startTimeExpectedEqualTo(
-      DateTime startTimeExpected) {
+  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> insertTimeEqualTo(
+      DateTime insertTime) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'startTimeExpected',
-        value: [startTimeExpected],
+        indexName: r'insertTime',
+        value: [insertTime],
       ));
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> startTimeExpectedNotEqualTo(
-      DateTime startTimeExpected) {
+  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> insertTimeNotEqualTo(
+      DateTime insertTime) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'startTimeExpected',
+              indexName: r'insertTime',
               lower: [],
-              upper: [startTimeExpected],
+              upper: [insertTime],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'startTimeExpected',
-              lower: [startTimeExpected],
+              indexName: r'insertTime',
+              lower: [insertTime],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'startTimeExpected',
-              lower: [startTimeExpected],
+              indexName: r'insertTime',
+              lower: [insertTime],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'startTimeExpected',
+              indexName: r'insertTime',
               lower: [],
-              upper: [startTimeExpected],
+              upper: [insertTime],
               includeUpper: false,
             ));
       }
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause>
-      startTimeExpectedGreaterThan(
-    DateTime startTimeExpected, {
+  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> insertTimeGreaterThan(
+    DateTime insertTime, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'startTimeExpected',
-        lower: [startTimeExpected],
+        indexName: r'insertTime',
+        lower: [insertTime],
         includeLower: include,
         upper: [],
       ));
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> startTimeExpectedLessThan(
-    DateTime startTimeExpected, {
+  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> insertTimeLessThan(
+    DateTime insertTime, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'startTimeExpected',
+        indexName: r'insertTime',
         lower: [],
-        upper: [startTimeExpected],
+        upper: [insertTime],
         includeUpper: include,
       ));
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> startTimeExpectedBetween(
-    DateTime lowerStartTimeExpected,
-    DateTime upperStartTimeExpected, {
+  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> insertTimeBetween(
+    DateTime lowerInsertTime,
+    DateTime upperInsertTime, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'startTimeExpected',
-        lower: [lowerStartTimeExpected],
+        indexName: r'insertTime',
+        lower: [lowerInsertTime],
         includeLower: includeLower,
-        upper: [upperStartTimeExpected],
+        upper: [upperInsertTime],
         includeUpper: includeUpper,
       ));
     });
@@ -3314,145 +3281,6 @@ extension SeeTaskQueryWhere on QueryBuilder<SeeTask, SeeTask, QWhereClause> {
 
 extension SeeTaskQueryFilter
     on QueryBuilder<SeeTask, SeeTask, QFilterCondition> {
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> actionsElementEqualTo(
-      int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'actions',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      actionsElementGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'actions',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> actionsElementLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'actions',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> actionsElementBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'actions',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> actionsLengthEqualTo(
-      int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'actions',
-        length,
-        true,
-        length,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> actionsIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'actions',
-        0,
-        true,
-        0,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> actionsIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'actions',
-        0,
-        false,
-        999999,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> actionsLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'actions',
-        0,
-        true,
-        length,
-        include,
-      );
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      actionsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'actions',
-        length,
-        include,
-        999999,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> actionsLengthBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'actions',
-        lower,
-        includeLower,
-        upper,
-        includeUpper,
-      );
-    });
-  }
-
   QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> descriptionEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -3654,73 +3482,187 @@ extension SeeTaskQueryFilter
   }
 
   QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      endTimeExpectedIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'endTimeExpected',
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      endTimeExpectedIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'endTimeExpected',
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> endTimeExpectedEqualTo(
-      DateTime? value) {
+      estimatedTimeInMinutesEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'endTimeExpected',
+        property: r'estimatedTimeInMinutes',
         value: value,
       ));
     });
   }
 
   QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      endTimeExpectedGreaterThan(
-    DateTime? value, {
+      estimatedTimeInMinutesGreaterThan(
+    int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'endTimeExpected',
+        property: r'estimatedTimeInMinutes',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> endTimeExpectedLessThan(
-    DateTime? value, {
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
+      estimatedTimeInMinutesLessThan(
+    int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'endTimeExpected',
+        property: r'estimatedTimeInMinutes',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> endTimeExpectedBetween(
-    DateTime? lower,
-    DateTime? upper, {
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
+      estimatedTimeInMinutesBetween(
+    int lower,
+    int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'endTimeExpected',
+        property: r'estimatedTimeInMinutes',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'evaluation',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'evaluation',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'evaluation',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'evaluation',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'evaluation',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'evaluation',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'evaluation',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'evaluation',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'evaluation',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluationIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'evaluation',
+        value: '',
       ));
     });
   }
@@ -3822,6 +3764,59 @@ extension SeeTaskQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> insertTimeEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'insertTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> insertTimeGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'insertTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> insertTimeLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'insertTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> insertTimeBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'insertTime',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -3964,6 +3959,59 @@ extension SeeTaskQueryFilter
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> scoreEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'score',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> scoreGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'score',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> scoreLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'score',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> scoreBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'score',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> startTimeIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -4025,62 +4073,6 @@ extension SeeTaskQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'startTime',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      startTimeExpectedEqualTo(DateTime value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'startTimeExpected',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      startTimeExpectedGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'startTimeExpected',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      startTimeExpectedLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'startTimeExpected',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
-      startTimeExpectedBetween(
-    DateTime lower,
-    DateTime upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'startTimeExpected',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -4274,14 +4266,7 @@ extension SeeTaskQueryFilter
 }
 
 extension SeeTaskQueryObject
-    on QueryBuilder<SeeTask, SeeTask, QFilterCondition> {
-  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> evaluation(
-      FilterQuery<TaskEvaluation> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.object(q, r'evaluation');
-    });
-  }
-}
+    on QueryBuilder<SeeTask, SeeTask, QFilterCondition> {}
 
 extension SeeTaskQueryLinks
     on QueryBuilder<SeeTask, SeeTask, QFilterCondition> {}
@@ -4311,15 +4296,28 @@ extension SeeTaskQuerySortBy on QueryBuilder<SeeTask, SeeTask, QSortBy> {
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByEndTimeExpected() {
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByEstimatedTimeInMinutes() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'endTimeExpected', Sort.asc);
+      return query.addSortBy(r'estimatedTimeInMinutes', Sort.asc);
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByEndTimeExpectedDesc() {
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy>
+      sortByEstimatedTimeInMinutesDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'endTimeExpected', Sort.desc);
+      return query.addSortBy(r'estimatedTimeInMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByEvaluation() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'evaluation', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByEvaluationDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'evaluation', Sort.desc);
     });
   }
 
@@ -4335,6 +4333,18 @@ extension SeeTaskQuerySortBy on QueryBuilder<SeeTask, SeeTask, QSortBy> {
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByInsertTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'insertTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByInsertTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'insertTime', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByParentMessageId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'parentMessageId', Sort.asc);
@@ -4347,6 +4357,18 @@ extension SeeTaskQuerySortBy on QueryBuilder<SeeTask, SeeTask, QSortBy> {
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'score', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByScoreDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'score', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByStartTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startTime', Sort.asc);
@@ -4356,18 +4378,6 @@ extension SeeTaskQuerySortBy on QueryBuilder<SeeTask, SeeTask, QSortBy> {
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByStartTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startTime', Sort.desc);
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByStartTimeExpected() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'startTimeExpected', Sort.asc);
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByStartTimeExpectedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'startTimeExpected', Sort.desc);
     });
   }
 
@@ -4422,15 +4432,28 @@ extension SeeTaskQuerySortThenBy
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByEndTimeExpected() {
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByEstimatedTimeInMinutes() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'endTimeExpected', Sort.asc);
+      return query.addSortBy(r'estimatedTimeInMinutes', Sort.asc);
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByEndTimeExpectedDesc() {
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy>
+      thenByEstimatedTimeInMinutesDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'endTimeExpected', Sort.desc);
+      return query.addSortBy(r'estimatedTimeInMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByEvaluation() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'evaluation', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByEvaluationDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'evaluation', Sort.desc);
     });
   }
 
@@ -4458,6 +4481,18 @@ extension SeeTaskQuerySortThenBy
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByInsertTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'insertTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByInsertTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'insertTime', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByParentMessageId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'parentMessageId', Sort.asc);
@@ -4470,6 +4505,18 @@ extension SeeTaskQuerySortThenBy
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'score', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByScoreDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'score', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByStartTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startTime', Sort.asc);
@@ -4479,18 +4526,6 @@ extension SeeTaskQuerySortThenBy
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByStartTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startTime', Sort.desc);
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByStartTimeExpected() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'startTimeExpected', Sort.asc);
-    });
-  }
-
-  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByStartTimeExpectedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'startTimeExpected', Sort.desc);
     });
   }
 
@@ -4521,12 +4556,6 @@ extension SeeTaskQuerySortThenBy
 
 extension SeeTaskQueryWhereDistinct
     on QueryBuilder<SeeTask, SeeTask, QDistinct> {
-  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByActions() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'actions');
-    });
-  }
-
   QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByDescription(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -4540,15 +4569,28 @@ extension SeeTaskQueryWhereDistinct
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByEndTimeExpected() {
+  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByEstimatedTimeInMinutes() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'endTimeExpected');
+      return query.addDistinctBy(r'estimatedTimeInMinutes');
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByEvaluation(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'evaluation', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByGoalId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'goalId');
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByInsertTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'insertTime');
     });
   }
 
@@ -4560,15 +4602,15 @@ extension SeeTaskQueryWhereDistinct
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByStartTime() {
+  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByScore() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'startTime');
+      return query.addDistinctBy(r'score');
     });
   }
 
-  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByStartTimeExpected() {
+  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByStartTime() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'startTimeExpected');
+      return query.addDistinctBy(r'startTime');
     });
   }
 
@@ -4594,12 +4636,6 @@ extension SeeTaskQueryProperty
     });
   }
 
-  QueryBuilder<SeeTask, List<int>, QQueryOperations> actionsProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'actions');
-    });
-  }
-
   QueryBuilder<SeeTask, String, QQueryOperations> descriptionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'description');
@@ -4612,13 +4648,14 @@ extension SeeTaskQueryProperty
     });
   }
 
-  QueryBuilder<SeeTask, DateTime?, QQueryOperations> endTimeExpectedProperty() {
+  QueryBuilder<SeeTask, int, QQueryOperations>
+      estimatedTimeInMinutesProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'endTimeExpected');
+      return query.addPropertyName(r'estimatedTimeInMinutes');
     });
   }
 
-  QueryBuilder<SeeTask, TaskEvaluation, QQueryOperations> evaluationProperty() {
+  QueryBuilder<SeeTask, String, QQueryOperations> evaluationProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'evaluation');
     });
@@ -4630,22 +4667,27 @@ extension SeeTaskQueryProperty
     });
   }
 
+  QueryBuilder<SeeTask, DateTime, QQueryOperations> insertTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'insertTime');
+    });
+  }
+
   QueryBuilder<SeeTask, String, QQueryOperations> parentMessageIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'parentMessageId');
     });
   }
 
-  QueryBuilder<SeeTask, DateTime?, QQueryOperations> startTimeProperty() {
+  QueryBuilder<SeeTask, int, QQueryOperations> scoreProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'startTime');
+      return query.addPropertyName(r'score');
     });
   }
 
-  QueryBuilder<SeeTask, DateTime, QQueryOperations>
-      startTimeExpectedProperty() {
+  QueryBuilder<SeeTask, DateTime?, QQueryOperations> startTimeProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'startTimeExpected');
+      return query.addPropertyName(r'startTime');
     });
   }
 
@@ -4673,33 +4715,43 @@ const SeeActionSchema = CollectionSchema(
   name: r'SeeAction',
   id: -4254748684991768037,
   properties: {
-    r'endTime': PropertySchema(
+    r'cost': PropertySchema(
       id: 0,
+      name: r'cost',
+      type: IsarType.float,
+    ),
+    r'endTime': PropertySchema(
+      id: 1,
       name: r'endTime',
       type: IsarType.dateTime,
     ),
+    r'goalId': PropertySchema(
+      id: 2,
+      name: r'goalId',
+      type: IsarType.long,
+    ),
     r'input': PropertySchema(
-      id: 1,
+      id: 3,
       name: r'input',
       type: IsarType.string,
     ),
     r'output': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'output',
       type: IsarType.string,
     ),
     r'startTime': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'startTime',
       type: IsarType.dateTime,
     ),
     r'taskId': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'taskId',
       type: IsarType.long,
     ),
     r'type': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'type',
       type: IsarType.byte,
       enumMap: _SeeActiontypeEnumValueMap,
@@ -4711,6 +4763,19 @@ const SeeActionSchema = CollectionSchema(
   deserializeProp: _seeActionDeserializeProp,
   idName: r'id',
   indexes: {
+    r'goalId': IndexSchema(
+      id: 2738626632585230611,
+      name: r'goalId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'goalId',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
     r'taskId': IndexSchema(
       id: -6391211041487498726,
       name: r'taskId',
@@ -4750,12 +4815,14 @@ void _seeActionSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.endTime);
-  writer.writeString(offsets[1], object.input);
-  writer.writeString(offsets[2], object.output);
-  writer.writeDateTime(offsets[3], object.startTime);
-  writer.writeLong(offsets[4], object.taskId);
-  writer.writeByte(offsets[5], object.type.index);
+  writer.writeFloat(offsets[0], object.cost);
+  writer.writeDateTime(offsets[1], object.endTime);
+  writer.writeLong(offsets[2], object.goalId);
+  writer.writeString(offsets[3], object.input);
+  writer.writeString(offsets[4], object.output);
+  writer.writeDateTime(offsets[5], object.startTime);
+  writer.writeLong(offsets[6], object.taskId);
+  writer.writeByte(offsets[7], object.type.index);
 }
 
 SeeAction _seeActionDeserialize(
@@ -4765,14 +4832,16 @@ SeeAction _seeActionDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = SeeAction();
-  object.endTime = reader.readDateTimeOrNull(offsets[0]);
+  object.cost = reader.readFloat(offsets[0]);
+  object.endTime = reader.readDateTimeOrNull(offsets[1]);
+  object.goalId = reader.readLong(offsets[2]);
   object.id = id;
-  object.input = reader.readString(offsets[1]);
-  object.output = reader.readString(offsets[2]);
-  object.startTime = reader.readDateTime(offsets[3]);
-  object.taskId = reader.readLong(offsets[4]);
-  object.type = _SeeActiontypeValueEnumMap[reader.readByteOrNull(offsets[5])] ??
-      ActionType.queryRawData;
+  object.input = reader.readString(offsets[3]);
+  object.output = reader.readString(offsets[4]);
+  object.startTime = reader.readDateTime(offsets[5]);
+  object.taskId = reader.readLong(offsets[6]);
+  object.type = _SeeActiontypeValueEnumMap[reader.readByteOrNull(offsets[7])] ??
+      ActionType.none;
   return object;
 }
 
@@ -4784,54 +4853,62 @@ P _seeActionDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readFloat(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
-    case 3:
-      return (reader.readDateTime(offset)) as P;
-    case 4:
       return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
     case 5:
+      return (reader.readDateTime(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
       return (_SeeActiontypeValueEnumMap[reader.readByteOrNull(offset)] ??
-          ActionType.queryRawData) as P;
+          ActionType.none) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
 const _SeeActiontypeEnumValueMap = {
-  'queryRawData': 0,
-  'queryStatsData': 1,
-  'search': 2,
-  'askGptForNewTask': 3,
-  'askGptForNextAction': 4,
-  'askGptForTaskProgressEvaluation': 5,
-  'askGptForTaskReorder': 6,
-  'askGptForTaskReduce': 7,
-  'askGptForNewPromtsOfTask': 8,
-  'getNewPictureFromCamera': 9,
-  'talkToPerson': 10,
-  'askPersonForEvaluation': 11,
-  'askPersonForTaskProgress': 12,
-  'askPersonForTaskReduce': 13,
+  'none': 0,
+  'queryRawData': 1,
+  'queryStatsData': 2,
+  'search': 3,
+  'askUserForCreateTask': 4,
+  'askUserForEvaluation': 5,
+  'askUserForTaskProgress': 6,
+  'askUserForTaskReduce': 7,
+  'askGptForCreateTask': 8,
+  'askGptForNextAction': 9,
+  'askGptForTaskProgressEvaluation': 10,
+  'askGptForTaskReorder': 11,
+  'askGptForTaskReduce': 12,
+  'askGptForNewExperience': 13,
+  'talkToPerson': 14,
+  'getNewPictureFromCamera': 15,
 };
 const _SeeActiontypeValueEnumMap = {
-  0: ActionType.queryRawData,
-  1: ActionType.queryStatsData,
-  2: ActionType.search,
-  3: ActionType.askGptForNewTask,
-  4: ActionType.askGptForNextAction,
-  5: ActionType.askGptForTaskProgressEvaluation,
-  6: ActionType.askGptForTaskReorder,
-  7: ActionType.askGptForTaskReduce,
-  8: ActionType.askGptForNewPromtsOfTask,
-  9: ActionType.getNewPictureFromCamera,
-  10: ActionType.talkToPerson,
-  11: ActionType.askPersonForEvaluation,
-  12: ActionType.askPersonForTaskProgress,
-  13: ActionType.askPersonForTaskReduce,
+  0: ActionType.none,
+  1: ActionType.queryRawData,
+  2: ActionType.queryStatsData,
+  3: ActionType.search,
+  4: ActionType.askUserForCreateTask,
+  5: ActionType.askUserForEvaluation,
+  6: ActionType.askUserForTaskProgress,
+  7: ActionType.askUserForTaskReduce,
+  8: ActionType.askGptForCreateTask,
+  9: ActionType.askGptForNextAction,
+  10: ActionType.askGptForTaskProgressEvaluation,
+  11: ActionType.askGptForTaskReorder,
+  12: ActionType.askGptForTaskReduce,
+  13: ActionType.askGptForNewExperience,
+  14: ActionType.talkToPerson,
+  15: ActionType.getNewPictureFromCamera,
 };
 
 Id _seeActionGetId(SeeAction object) {
@@ -4851,6 +4928,14 @@ extension SeeActionQueryWhereSort
   QueryBuilder<SeeAction, SeeAction, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhere> anyGoalId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'goalId'),
+      );
     });
   }
 
@@ -4925,6 +5010,96 @@ extension SeeActionQueryWhere
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> goalIdEqualTo(
+      int goalId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'goalId',
+        value: [goalId],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> goalIdNotEqualTo(
+      int goalId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'goalId',
+              lower: [],
+              upper: [goalId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'goalId',
+              lower: [goalId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'goalId',
+              lower: [goalId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'goalId',
+              lower: [],
+              upper: [goalId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> goalIdGreaterThan(
+    int goalId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'goalId',
+        lower: [goalId],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> goalIdLessThan(
+    int goalId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'goalId',
+        lower: [],
+        upper: [goalId],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> goalIdBetween(
+    int lowerGoalId,
+    int upperGoalId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'goalId',
+        lower: [lowerGoalId],
+        includeLower: includeLower,
+        upper: [upperGoalId],
         includeUpper: includeUpper,
       ));
     });
@@ -5023,6 +5198,68 @@ extension SeeActionQueryWhere
 
 extension SeeActionQueryFilter
     on QueryBuilder<SeeAction, SeeAction, QFilterCondition> {
+  QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> costEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cost',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> costGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cost',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> costLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cost',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> costBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cost',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> endTimeIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -5084,6 +5321,59 @@ extension SeeActionQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'endTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> goalIdEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'goalId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> goalIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'goalId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> goalIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'goalId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterFilterCondition> goalIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'goalId',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -5573,6 +5863,18 @@ extension SeeActionQueryLinks
     on QueryBuilder<SeeAction, SeeAction, QFilterCondition> {}
 
 extension SeeActionQuerySortBy on QueryBuilder<SeeAction, SeeAction, QSortBy> {
+  QueryBuilder<SeeAction, SeeAction, QAfterSortBy> sortByCost() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cost', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterSortBy> sortByCostDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cost', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeAction, SeeAction, QAfterSortBy> sortByEndTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.asc);
@@ -5582,6 +5884,18 @@ extension SeeActionQuerySortBy on QueryBuilder<SeeAction, SeeAction, QSortBy> {
   QueryBuilder<SeeAction, SeeAction, QAfterSortBy> sortByEndTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterSortBy> sortByGoalId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterSortBy> sortByGoalIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalId', Sort.desc);
     });
   }
 
@@ -5648,6 +5962,18 @@ extension SeeActionQuerySortBy on QueryBuilder<SeeAction, SeeAction, QSortBy> {
 
 extension SeeActionQuerySortThenBy
     on QueryBuilder<SeeAction, SeeAction, QSortThenBy> {
+  QueryBuilder<SeeAction, SeeAction, QAfterSortBy> thenByCost() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cost', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterSortBy> thenByCostDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cost', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeAction, SeeAction, QAfterSortBy> thenByEndTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.asc);
@@ -5657,6 +5983,18 @@ extension SeeActionQuerySortThenBy
   QueryBuilder<SeeAction, SeeAction, QAfterSortBy> thenByEndTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterSortBy> thenByGoalId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterSortBy> thenByGoalIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalId', Sort.desc);
     });
   }
 
@@ -5735,9 +6073,21 @@ extension SeeActionQuerySortThenBy
 
 extension SeeActionQueryWhereDistinct
     on QueryBuilder<SeeAction, SeeAction, QDistinct> {
+  QueryBuilder<SeeAction, SeeAction, QDistinct> distinctByCost() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cost');
+    });
+  }
+
   QueryBuilder<SeeAction, SeeAction, QDistinct> distinctByEndTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'endTime');
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QDistinct> distinctByGoalId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'goalId');
     });
   }
 
@@ -5782,9 +6132,21 @@ extension SeeActionQueryProperty
     });
   }
 
+  QueryBuilder<SeeAction, double, QQueryOperations> costProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cost');
+    });
+  }
+
   QueryBuilder<SeeAction, DateTime?, QQueryOperations> endTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'endTime');
+    });
+  }
+
+  QueryBuilder<SeeAction, int, QQueryOperations> goalIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'goalId');
     });
   }
 
@@ -6812,29 +7174,7 @@ extension StatePatternQueryObject
 const TaskEvaluationSchema = Schema(
   name: r'TaskEvaluation',
   id: -2490526241653144247,
-  properties: {
-    r'cost': PropertySchema(
-      id: 0,
-      name: r'cost',
-      type: IsarType.long,
-    ),
-    r'description': PropertySchema(
-      id: 1,
-      name: r'description',
-      type: IsarType.string,
-    ),
-    r'from': PropertySchema(
-      id: 2,
-      name: r'from',
-      type: IsarType.byte,
-      enumMap: _TaskEvaluationfromEnumValueMap,
-    ),
-    r'score': PropertySchema(
-      id: 3,
-      name: r'score',
-      type: IsarType.long,
-    )
-  },
+  properties: {},
   estimateSize: _taskEvaluationEstimateSize,
   serialize: _taskEvaluationSerialize,
   deserialize: _taskEvaluationDeserialize,
@@ -6847,7 +7187,6 @@ int _taskEvaluationEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.description.length * 3;
   return bytesCount;
 }
 
@@ -6856,13 +7195,7 @@ void _taskEvaluationSerialize(
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
-) {
-  writer.writeLong(offsets[0], object.cost);
-  writer.writeString(offsets[1], object.description);
-  writer.writeByte(offsets[2], object.from.index);
-  writer.writeLong(offsets[3], object.score);
-}
-
+) {}
 TaskEvaluation _taskEvaluationDeserialize(
   Id id,
   IsarReader reader,
@@ -6870,12 +7203,6 @@ TaskEvaluation _taskEvaluationDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = TaskEvaluation();
-  object.cost = reader.readLong(offsets[0]);
-  object.description = reader.readString(offsets[1]);
-  object.from =
-      _TaskEvaluationfromValueEnumMap[reader.readByteOrNull(offsets[2])] ??
-          TaskEvaluationFrom.gpt;
-  object.score = reader.readLong(offsets[3]);
   return object;
 }
 
@@ -6886,335 +7213,13 @@ P _taskEvaluationDeserializeProp<P>(
   Map<Type, List<int>> allOffsets,
 ) {
   switch (propertyId) {
-    case 0:
-      return (reader.readLong(offset)) as P;
-    case 1:
-      return (reader.readString(offset)) as P;
-    case 2:
-      return (_TaskEvaluationfromValueEnumMap[reader.readByteOrNull(offset)] ??
-          TaskEvaluationFrom.gpt) as P;
-    case 3:
-      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-const _TaskEvaluationfromEnumValueMap = {
-  'gpt': 0,
-  'human': 1,
-};
-const _TaskEvaluationfromValueEnumMap = {
-  0: TaskEvaluationFrom.gpt,
-  1: TaskEvaluationFrom.human,
-};
-
 extension TaskEvaluationQueryFilter
-    on QueryBuilder<TaskEvaluation, TaskEvaluation, QFilterCondition> {
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      costEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'cost',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      costGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'cost',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      costLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'cost',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      costBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'cost',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'description',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'description',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'description',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'description',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'description',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'description',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'description',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'description',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'description',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      descriptionIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'description',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      fromEqualTo(TaskEvaluationFrom value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'from',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      fromGreaterThan(
-    TaskEvaluationFrom value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'from',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      fromLessThan(
-    TaskEvaluationFrom value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'from',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      fromBetween(
-    TaskEvaluationFrom lower,
-    TaskEvaluationFrom upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'from',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      scoreEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'score',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      scoreGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'score',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      scoreLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'score',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaskEvaluation, TaskEvaluation, QAfterFilterCondition>
-      scoreBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'score',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-}
+    on QueryBuilder<TaskEvaluation, TaskEvaluation, QFilterCondition> {}
 
 extension TaskEvaluationQueryObject
     on QueryBuilder<TaskEvaluation, TaskEvaluation, QFilterCondition> {}

@@ -8,6 +8,13 @@ import 'package:see_me_now/ui/chat_list_page.dart';
 import 'package:see_me_now/ui/chat_widget.dart';
 
 class HomeController extends GetxController {
+  bool inSubWindow = false;
+  void setInSubWindow(bool value) {
+    inSubWindow = value;
+    Log.log.fine('in HomeController, inSubWindow changed to $value');
+    MyApp.refreshHome();
+  }
+
   int topicId = -1;
   // -1: topic list; 0: new topic; >0 topic detail
   void setTopicId(int value) {
@@ -85,45 +92,37 @@ class HomePageState extends State<HomePage>
               padding: const EdgeInsets.only(right: 20.0),
               child: GestureDetector(
                 onTap: () async {
+                  c.setInSubWindow(true);
+                  await MyApp.goalManager.showGoalsAndTasks();
+                  c.setInSubWindow(false);
+                },
+                child: const Icon(Icons.task),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 20.0),
+              child: GestureDetector(
+                onTap: () async {
                   c.setTopicId(0);
                 },
                 child: const Icon(Icons.chat),
               ),
             ),
-            c.topicId <= 0
-                ? Padding(
-                    padding: const EdgeInsets.only(right: 20.0),
-                    child: GestureDetector(
-                      onTap: () async {
-                        await Get.toNamed('/prompts');
-                        c.setTopicId(0);
-                        setState(() {
-                          appBarTitle = DB.getDefaultPromptName();
-                          Log.log.fine(
-                              'back from prompts page, title changed to $appBarTitle');
-                        });
-                      },
-                      child: const Icon(Icons.emoji_people),
-                    ),
-                  )
-                : Container(),
-            // Padding(
-            //     padding: const EdgeInsets.only(right: 20.0),
-            //     child: GestureDetector(
-            //       onTap: () => Get.defaultDialog(
-            //         title: 'Coming Soon',
-            //         content: const Text('This feature is coming soon.'),
-            //         actions: [
-            //           TextButton(
-            //             child: const Text('OK'),
-            //             onPressed: () {
-            //               Get.back();
-            //             },
-            //           ),
-            //         ],
-            //       ),
-            //       child: const Icon(Icons.search),
-            //     )),
+            Padding(
+              padding: const EdgeInsets.only(right: 20.0),
+              child: GestureDetector(
+                onTap: () async {
+                  await Get.toNamed('/prompts');
+                  c.setTopicId(0);
+                  setState(() {
+                    appBarTitle = DB.getDefaultPromptName();
+                    Log.log.fine(
+                        'back from prompts page, title changed to $appBarTitle');
+                  });
+                },
+                child: const Icon(Icons.emoji_people),
+              ),
+            ),
             Padding(
                 padding: const EdgeInsets.only(right: 20.0),
                 child: GestureDetector(
@@ -158,12 +157,14 @@ class HomePageState extends State<HomePage>
                   ),
                 ],
               ),
-              Opacity(
-                opacity: chatOpacity,
-                child: controller.topicId < 0
-                    ? const ExtensibleTopicList()
-                    : ChatWidget(chatId: controller.topicId),
-              ),
+              c.inSubWindow
+                  ? const SizedBox()
+                  : Opacity(
+                      opacity: chatOpacity,
+                      child: controller.topicId < 0
+                          ? const ExtensibleTopicList()
+                          : ChatWidget(chatId: controller.topicId),
+                    ),
               // show reminderTxt
               Positioned(
                 bottom: 30,
@@ -177,7 +178,7 @@ class HomePageState extends State<HomePage>
                         color: Color.fromARGB(204, 255, 255, 255)),
                   ),
                 ),
-              )
+              ),
             ]),
           );
         }),

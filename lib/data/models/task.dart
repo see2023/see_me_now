@@ -6,23 +6,23 @@ enum GoalType { once, daily, always }
 
 enum TaskStatus { pending, running, done, failed, suspended, cancelled }
 
-enum TaskEvaluationFrom { gpt, human }
-
 enum ActionType {
+  none,
   queryRawData,
   queryStatsData,
   search,
-  askGptForNewTask,
+  askUserForCreateTask,
+  askUserForEvaluation,
+  askUserForTaskProgress,
+  askUserForTaskReduce,
+  askGptForCreateTask,
   askGptForNextAction,
   askGptForTaskProgressEvaluation,
   askGptForTaskReorder,
   askGptForTaskReduce,
-  askGptForNewPromtsOfTask,
-  getNewPictureFromCamera,
+  askGptForNewExperience,
   talkToPerson,
-  askPersonForEvaluation,
-  askPersonForTaskProgress,
-  askPersonForTaskReduce,
+  getNewPictureFromCamera,
 }
 
 enum StateKey { none, appear, upright, smile }
@@ -36,27 +36,22 @@ class StatePattern {
 }
 
 @embedded
-class TaskEvaluation {
-  @enumerated
-  TaskEvaluationFrom from = TaskEvaluationFrom.gpt;
-  String description = '';
-  int score = 0;
-  int cost = 0;
-}
+class TaskEvaluation {}
 
 @collection
 class SeeGoal {
   Id id = Isar.autoIncrement;
   String name = '';
   String description = '';
+  @Index()
   int priority = 0;
+  @Index()
   DateTime insertTime = DateTime.now();
-  DateTime updateTime = DateTime.now();
+  DateTime? updateTime;
   @enumerated
   GoalType type = GoalType.daily;
-  List<StatePattern> statePatterns = [];
-  List<String> experiences = [];
   List<int> tasks = [];
+  List<StatePattern> statePatterns = [];
 }
 
 @collection
@@ -94,14 +89,16 @@ class SeeTask {
   TaskStatus status = TaskStatus.pending;
 
   @Index()
-  DateTime startTimeExpected = DateTime.now();
-  DateTime? endTimeExpected;
+  DateTime insertTime = DateTime.now();
   DateTime? startTime;
   DateTime? endTime;
+  int estimatedTimeInMinutes = 0;
 
-  TaskEvaluation evaluation = TaskEvaluation();
+  @enumerated
+  String evaluation = '';
+  int score = 0;
+
   String parentMessageId = '';
-  List<int> actions = [];
 }
 
 @collection
@@ -109,13 +106,20 @@ class SeeAction {
   Id id = Isar.autoIncrement;
 
   @Index()
+  int goalId = 0;
+
+  @Index()
   int taskId = 0;
   @enumerated
   ActionType type = ActionType.queryRawData;
+
   DateTime startTime = DateTime.now();
   DateTime? endTime;
+
   String input = '';
   String output = '';
+
+  float cost = 0;
 }
 
 @collection

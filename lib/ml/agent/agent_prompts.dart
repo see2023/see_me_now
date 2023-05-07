@@ -4,7 +4,7 @@ class AgentPromts {
   static Map<StateKey, String> stateKeyInfo = {
     StateKey.none: '',
     StateKey.appear: 'appear',
-    StateKey.upright: 'upright',
+    StateKey.upright: 'sitting upright',
     StateKey.smile: 'smile'
   };
   static String gptPromptPrefix = '''
@@ -23,7 +23,7 @@ Output is the list of tasks you analyzed, including task description(if userInpu
  sorted by importance from front to back, and outputted in the required JSON format.
 """,
     ActionType.askGptForNewExperience: """$gptPromptPrefix
-This time, you will obtain the state info from the input JSON: goalState, having these fields:
+This time, you will obtain the global state from the input JSON: goalState, having these fields:
   goalName,
   goalDescription, 
   An array of tasks: 

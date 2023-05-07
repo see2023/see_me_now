@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:see_me_now/data/models/task.dart';
-import 'package:see_me_now/ml/agent/goal_mananer.dart';
+import 'package:see_me_now/ml/agent/agent_data.dart';
 import 'package:get/get.dart';
 import 'package:see_me_now/ui/agent/rating_widget.dart';
 
@@ -195,8 +195,8 @@ class _GoalWidgetState extends State<GoalWidget> {
           Opacity(
             opacity: 0.75,
             child: Container(
-              padding: const EdgeInsets.only(
-                  top: 100, left: 10, right: 10, bottom: 30),
+              padding:
+                  const EdgeInsets.only(top: 90, left: 5, right: 5, bottom: 20),
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: widget.orderedGoals?.length ?? 0,
@@ -207,7 +207,7 @@ class _GoalWidgetState extends State<GoalWidget> {
                     return Container();
                   }
                   return Container(
-                    padding: const EdgeInsets.all(5.0),
+                    padding: const EdgeInsets.all(10.0),
                     decoration: BoxDecoration(
                       border: Border.all(
                         color: Colors.grey,
@@ -247,7 +247,7 @@ class _GoalWidgetState extends State<GoalWidget> {
                             task.status != TaskStatus.cancelled &&
                             task.status != TaskStatus.failed;
                         return Container(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.all(5.0),
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: Colors.grey,

@@ -40,6 +40,25 @@ The experiences used to generate these tasks for this goal: experiencesUsed.
 
 Based on the above information, you need to analyze the validity of the experience used this time, and fine-tune the experience for better results when creating subsequent tasks for the same goal.
 The output experience should be in the required json format.
+""",
+    ActionType.askGptForTaskProgressEvaluation: """$gptPromptPrefix
+This time, you will obtain these fields from input JSON:
+  goalName,
+  goalDescription, 
+  taskDescription,
+  the estimated time of this task: estimatedTime,
+  the time spent of this task: timeSpent,
+  the experiences used to generate this task for this goal: experiencesUsed,
+  questions asked by users during the task: questions,
+  an array of indexes from environment: envStates, including:
+    meaning of status values: stateName,
+    the correlation values obtained from the external environment during the completion of the task: valueNow, 
+    and the values of the same goal from the previous three days for comparison: valueBefore,
+    positive = true here means that the higher score is better, vice versa.
+Based on the above information, you need to assess the user's status and give reasonable advice to ensure that the task is completed on time; 
+if you feel that the information is not enough to assess the current situation, you can also ask the user once for his or her own feedback and then give definitive advice, 
+including progress reminders, secondary task discards, reminders of relevant knowledge, etc.
+The output should be in the required json format.
 """
   };
 }

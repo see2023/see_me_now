@@ -116,17 +116,28 @@ The response content should be short and easy to understand and should not excee
       talkTime++;
       parentMessageId = res.parentMessageId;
       Log.log.fine('got ai text response: ${res.text}');
-      var rt = await DB.azureProxy.textToWavAndVisemes(
-          res.text, res.parentMessageId,
-          thisVoiceName: DB.promptsMap[DB.firstPromptId]?.voiceName ?? '');
-      if (rt.status) {
-        Log.log.fine(
-            'start sending visemes to webview, got ${rt.visemesText.length} visemes');
-        MyApp.glbViewerStateKey.currentState!.sendVisemes(rt.visemesText);
-        MyApp.homePageStateKey.currentState!.changeOpacity(false);
-        c.setReminderTxt(res.text);
-        VoiceAssistant.play(rt.wavFilePath, clearReminderTxt: true);
-      }
+      talk(res.text, messageId: res.parentMessageId, showTextInHome: true);
     });
+  }
+
+  talk(String text,
+      {String messageId = '', bool showTextInHome = false}) async {
+    String fileId = messageId;
+    if (fileId.isEmpty) {
+      fileId = DB.uuid.v4();
+    }
+    var rt = await DB.azureProxy.textToWavAndVisemes(text, fileId,
+        thisVoiceName: DB.promptsMap[DB.firstPromptId]?.voiceName ?? '');
+    if (rt.status) {
+      Log.log.fine(
+          'start sending visemes to webview, got ${rt.visemesText.length} visemes');
+      MyApp.glbViewerStateKey.currentState!.sendVisemes(rt.visemesText);
+      MyApp.homePageStateKey.currentState!.changeOpacity(false);
+      if (showTextInHome) {
+        final HomeController c = Get.put(HomeController());
+        c.setReminderTxt(text);
+      }
+      VoiceAssistant.play(rt.wavFilePath, clearReminderTxt: showTextInHome);
+    }
   }
 }

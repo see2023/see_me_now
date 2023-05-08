@@ -66,7 +66,7 @@ class Me {
   static const int statusChangeCount = 10 * 1000 ~/ CameraView.detectInterval;
   static List<StatData> statList = <StatData>[];
   static var cameraDataBus = Event<CameraData>();
-  static var silenceTalk = SeeMe();
+  static var defaultSpeaker = SeeMe();
   static void init() {
     cameraDataBus.subscribe(Me.handle);
     Log.log.info('init me');
@@ -128,7 +128,7 @@ class Me {
           'latestStat from face and labels: ${MyApp.latestStat.currentStatus}');
       MyApp.latestStat.notify();
       if (DB.setting.enableAIReplyFromCamera) {
-        silenceTalk.gotData(statList);
+        defaultSpeaker.gotData(statList);
       } else {
         notifyByRule(dataIndex);
       }

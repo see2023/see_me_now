@@ -157,6 +157,63 @@ class _SimpleGoalWidgetState extends State<SimpleGoalWidget> {
   }
 }
 
+class ProgressWidget extends StatefulWidget {
+  final SeeTask? task;
+  const ProgressWidget({Key? key, this.task}) : super(key: key);
+  @override
+  State<StatefulWidget> createState() => _ProgressWidgetState();
+}
+
+//just show progress bar of the running SeeTask by startTime, estimatedTimeInMinutes
+class _ProgressWidgetState extends State<ProgressWidget> {
+  bool rendering = false;
+  @override
+  void initState() {
+    super.initState();
+    rendering = true;
+  }
+
+  @override
+  void dispose() {
+    rendering = false;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // refresh progress per minute
+    Future.delayed(const Duration(seconds: 10), () {
+      if (rendering) {
+        setState(() {});
+      }
+    });
+    int estimatedTimeInMinutes = widget.task?.estimatedTimeInMinutes ?? 0;
+    if (estimatedTimeInMinutes <= 0) {
+      estimatedTimeInMinutes = 1;
+    }
+    int actualTimeInMinutes = 0;
+    if (widget.task?.startTime != null) {
+      actualTimeInMinutes =
+          DateTime.now().difference(widget.task!.startTime!).inMinutes;
+    }
+    return Text(
+      '${actualTimeInMinutes.toString()} / ${estimatedTimeInMinutes.toString()}',
+      style: const TextStyle(fontSize: 15),
+    );
+    // double progress = actualTimeInMinutes / estimatedTimeInMinutes;
+    // return Container(
+    //   padding: const EdgeInsets.all(20.0),
+
+    //   // show progress bar
+    //   child: LinearProgressIndicator(
+    //     value: actualTimeInMinutes / estimatedTimeInMinutes,
+    //     backgroundColor: Colors.grey,
+    //     valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+    //   ),
+    // );
+  }
+}
+
 // show goals and tasks with finish and cancel button
 
 // ignore: must_be_immutable
@@ -261,9 +318,11 @@ class _GoalWidgetState extends State<GoalWidget> {
                                 flex: 5,
                                 child: Text(
                                   style: TextStyle(
-                                    color: notFinished
-                                        ? Colors.white
-                                        : Colors.grey,
+                                    color: task.status == TaskStatus.running
+                                        ? Colors.yellow
+                                        : notFinished
+                                            ? Colors.white
+                                            : Colors.grey,
                                   ),
                                   task.description,
                                   textAlign: TextAlign.left,
@@ -272,11 +331,14 @@ class _GoalWidgetState extends State<GoalWidget> {
                               ),
                               Expanded(
                                 flex: 1,
-                                child: Text(
-                                  task.estimatedTimeInMinutes.toString(),
-                                  textAlign: TextAlign.center,
-                                  softWrap: true,
+                                child: ProgressWidget(
+                                  task: task,
                                 ),
+                                // child: Text(
+                                //   task.estimatedTimeInMinutes.toString(),
+                                //   textAlign: TextAlign.center,
+                                //   softWrap: true,
+                                // ),
                               ),
                               task.status == TaskStatus.done
                                   ? const Opacity(

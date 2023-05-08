@@ -9,12 +9,15 @@ import 'package:see_me_now/data/models/task.dart';
 import 'package:see_me_now/ml/agent/agent_data.dart';
 import 'package:see_me_now/ml/agent/actions.dart';
 import 'package:see_me_now/ml/agent/agent_prompts.dart';
+import 'package:see_me_now/ml/me.dart';
 import 'package:see_me_now/ui/agent/goal_widget.dart';
+import 'package:see_me_now/ui/agent/txt_show_widget.dart';
 import 'package:see_me_now/ui/home_page.dart';
 
 class GoalManager extends GetxController {
   static double maxCostPerTask = 1000;
   static int maxActionsPerTask = 20;
+  static int minCheckProgressInterval = 10 * 60;
 
   late Timer _timer;
   bool running = false;
@@ -55,11 +58,9 @@ class GoalManager extends GetxController {
     if (DB.isar == null) {
       return;
     }
-    if (agentData.runningActionId > 0) {
+    if (agentData.runningAction) {
       // check action timeout
-      Log.log.fine('action ${agentData.runningActionId} pending');
-      // execute next action
-      await executeNextAction(agentData.runningTaskId);
+      Log.log.fine('action pending');
       return;
     }
     if (agentData.runningTaskId > 0) {
@@ -67,8 +68,7 @@ class GoalManager extends GetxController {
       // check any new task should cut in line
 
       //generate next action
-      agentData.runningActionId =
-          await generateNextAction(agentData.runningTaskId);
+      await generateNextAction(agentData.runningTaskId);
 
       return;
     }
@@ -182,13 +182,16 @@ class GoalManager extends GetxController {
 
   Future<String> askUserForTasks(SeeGoal goal) async {
     String showText = 'askUserForTasks'.trParams({'name': goal.name});
-    MyAction action =
-        MyAction(goal.id, 0, ActionType.askUserForCreateTask, showText);
+    return await askUserCommon(goal, showText);
+  }
 
+  Future<String> askUserCommon(SeeGoal goal, String inputText) async {
+    MyAction action = MyAction(goal.id, 0, ActionType.askUserCommon, inputText);
     homeCon.setInSubWindow(true);
     await action.excute();
     homeCon.setInSubWindow(false);
-    Log.log.fine('askUserForTasks output: ${action.act?.output}');
+    Log.log
+        .fine('askUserCommon input:$inputText, output: ${action.act?.output}');
     return action.act?.output ?? '';
   }
 
@@ -396,6 +399,37 @@ Ensure the response can be parsed by Python json.loads, without any Note.
   }
 
   Future<int> generateNextAction(int taskId) async {
+    SeeGoal? goal = agentData.goalsMap[agentData.tasksMap[taskId]?.goalId];
+    SeeTask? task = agentData.tasksMap[taskId];
+    if (goal == null || task == null) {
+      Log.log.warning(
+          'generateNextAction goal or task is null, goal: $goal, task: $task');
+      return 0;
+    }
+
+    // get last action from db
+    SeeAction? lastAction = await DB.isar?.seeActions
+        .where()
+        .taskIdEqualTo(taskId)
+        .sortByStartTimeDesc()
+        .findFirst();
+    // make sure task.startTime is before minCheckProgressInterval seconds ago
+    if (task.startTime != null &&
+        DateTime.now().difference(task.startTime!).inSeconds <
+            minCheckProgressInterval) {
+      Log.log.fine(
+          'generateNextAction task is too close from task.startTime, skip, task: $task, lastAction: $lastAction');
+      return 0;
+    }
+    // make sure last action is before minCheckProgressInterval seconds ago
+    if (lastAction != null &&
+        DateTime.now().difference(lastAction.startTime).inSeconds <
+            minCheckProgressInterval) {
+      Log.log.fine(
+          'generateNextAction last action is too close, skip, lastAction: $lastAction');
+      return 0;
+    }
+
     // get action total count and cost from db
     int actionCount =
         DB.isar?.seeActions.where().taskIdEqualTo(taskId).countSync() ?? 0;
@@ -403,6 +437,8 @@ Ensure the response can be parsed by Python json.loads, without any Note.
     double actionCost = DB.isar?.seeActions
             .where()
             .taskIdEqualTo(taskId)
+            .filter()
+            .typeEqualTo(ActionType.askGptForTaskProgressEvaluation)
             .costProperty()
             .sumSync() ??
         0.0;
@@ -414,16 +450,112 @@ Ensure the response can be parsed by Python json.loads, without any Note.
 
     // Check progress and give advice if progress is slow
 
+    await askGptForTaskProgressEvaluation(goal, task);
+
     return 0;
-    // SeeAction action = SeeAction()
-    //   ..taskId = taskId
-    //   // ..actionType = ActionType.confirm
-    //   ..cost = 0.0;
-    // int newId = DB.isar?.seeActions.putSync(action) ?? 0;
-    // return newId;
   }
 
-  Future<int> executeNextAction(int taskId) async {
-    return 0;
+  Future<bool> askGptForTaskProgressEvaluation(
+      SeeGoal goal, SeeTask task) async {
+    GoalState? goalState = await agentData.readStateOfGoal(goal);
+    if (goalState == null) {
+      Log.log
+          .warning('generateNextAction goalState is null, goal: ${goal.name}');
+      return false;
+    }
+    List<String> questions = await agentData
+        .getLatestQuestionAskByUser(task.startTime ?? task.insertTime);
+    String sysPromts =
+        AgentPromts.agentPrompts[ActionType.askGptForTaskProgressEvaluation]!;
+    List<String> experiencesUsed = await agentData.getExperience(goal.id);
+    // ask gpt for new experience
+    Map<String, dynamic> inputMap = {
+      'goalName': goalState.goalName,
+      'goalDiscription': goalState.goalDescription,
+      'taskDiscription': task.description,
+      'estimatedTime': task.estimatedTimeInMinutes,
+      'timeSpent': DateTime.now()
+          .difference(task.startTime ?? task.insertTime)
+          .inMinutes,
+      'questions': questions,
+      'experienceUsed': experiencesUsed,
+      'envStates': goalState.envStates.map((e) => e.toString()).toList(),
+      'constraints': '''
+You should only respond in JSON format as described below:
+needMoreInfo is a bool, if true, I will ask user to provide more information, if false, I will use the text to remind user,
+text should be a string, if taskDiscription is Chinese, please reply in Chinese; Otherwise, please use English.
+{
+  "needMoreInfo": bool,
+  "text": "...."
+}
+Responses should be short, less than 100 words, and can be parsed by Python json.loads, without any Note.
+''',
+    };
+    MyAction action = MyAction(
+        goal.id, task.id, ActionType.askGptForTaskProgressEvaluation, '',
+        inMap: inputMap, sysPrompt: sysPromts);
+    await action.excute();
+    Log.log.fine('askGptForNewExperience output: ${action.act?.output}');
+    String text = '';
+    String parentMessageId = '';
+    try {
+      bool needMoreInfo = action.outputMap?['needMoreInfo'] ?? false;
+      text = action.outputMap?['text'] ?? '';
+      if (needMoreInfo && text.isNotEmpty) {
+        // ask user for more information
+        String userFeedback = await askUserCommon(goal, text);
+        if (userFeedback.isEmpty) {
+          Log.log.warning(
+              'askGptForNewExperience userFeedback is empty, ${action.act?.output}');
+          return false;
+        }
+        parentMessageId = action.parentMessageId;
+        MyAction action2 = MyAction(goal.id, task.id,
+            ActionType.askGptForTaskProgressEvaluation, userFeedback,
+            sysPrompt: sysPromts, parentMessageId: parentMessageId);
+        await action2.excute();
+        needMoreInfo = action.outputMap?['needMoreInfo'] ?? false;
+        text = action.outputMap?['text'] ?? '';
+        if (!needMoreInfo && text.isNotEmpty) {
+          // use text to remind user
+        } else {
+          Log.log.warning(
+              'askGptForNewExperience (needMoreInfo) output error, ${action.act?.output}');
+          return false;
+        }
+      } else if (!needMoreInfo && text.isNotEmpty) {
+        // use text to remind user
+      } else {
+        Log.log.warning(
+            'askGptForNewExperience output error, ${action.act?.output}');
+        return false;
+      }
+    } catch (e) {
+      Log.log.warning('askGptForNewExperience output is not valid json, $e');
+      return false;
+    }
+
+    // show text to user
+    await showTextToUser(text: text, messageId: parentMessageId);
+    return true;
+  }
+
+  Future<bool> showTextToUser(
+      {bool showAvatar = true,
+      String text = '',
+      String messageId = '',
+      List<String> strings = const [],
+      Map<String, dynamic> map = const {}}) async {
+    if (showAvatar) {
+      Me.defaultSpeaker.talk(text, messageId: messageId);
+    }
+    homeCon.setInSubWindow(true);
+    await showDialog(
+      barrierColor: Colors.transparent,
+      context: Get.context!,
+      builder: (_) => TxtShowWidget(text: text),
+    );
+    homeCon.setInSubWindow(false);
+    return true;
   }
 }

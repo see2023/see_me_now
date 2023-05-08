@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
+import 'package:see_me_now/data/constants.dart';
 import 'package:see_me_now/data/db.dart';
 import 'package:see_me_now/data/log.dart';
+import 'package:see_me_now/data/models/message.dart';
 import 'package:see_me_now/data/models/task.dart';
 import 'package:see_me_now/ml/agent/agent_prompts.dart';
 
@@ -74,8 +76,8 @@ class GoalState {
 
 class AgentData {
   int runningTaskId = 0;
-  int runningActionId = 0;
   int runningGoalId = 0;
+  bool runningAction = false;
   List<int> orderedGoals = [];
   Map<int, SeeGoal> goalsMap = {};
   Map<int, SeeTask> tasksMap = {};
@@ -229,7 +231,11 @@ class AgentData {
       return;
     }
     await DB.isar?.writeTxn(() async {
-      task.startTime ??= DateTime.now();
+      if (status == TaskStatus.running) {
+        task.startTime = DateTime.now();
+      } else {
+        task.startTime ??= DateTime.now();
+      }
       task.status = status;
       if (score > 0) task.score = score;
       if (status == TaskStatus.done ||
@@ -238,7 +244,7 @@ class AgentData {
         task.endTime = DateTime.now();
         if (runningTaskId == taskId) {
           runningTaskId = 0;
-          runningActionId = 0;
+          runningAction = false;
         }
         // check if goal is done
         SeeGoal? goal = goalsMap[task.goalId];
@@ -341,11 +347,11 @@ class AgentData {
         TaskScore taskState = TaskScore();
         taskState.taskDescription = task.description;
         taskState.estimatedTime = task.estimatedTimeInMinutes;
-        if (task.startTime == null || task.endTime == null) {
+        if (task.startTime == null) {
           taskState.timeSpent = 0;
         } else {
-          taskState.timeSpent =
-              task.endTime!.difference(task.startTime!).inMinutes;
+          DateTime endTime = task.endTime ?? DateTime.now();
+          taskState.timeSpent = endTime.difference(task.startTime!).inMinutes;
         }
         taskState.score = task.score.toDouble();
         goalState.taskScores.add(taskState);
@@ -380,13 +386,12 @@ class AgentData {
             if (task == null || goalState.taskScores[j].timeSpent == 0) {
               continue;
             }
-            if (task.startTime != null &&
-                task.endTime != null &&
-                goal.statePatterns.isNotEmpty) {
-              // query MeStateHistory [task.startTime - task.endTime] according to goal.statePatterns
+            DateTime endTime = task.endTime ?? DateTime.now();
+            if (task.startTime != null && goal.statePatterns.isNotEmpty) {
+              // query MeStateHistory [task.startTime - endTime] according to goal.statePatterns
               double v2 = await DB.isar?.meStateHistorys
                       .where()
-                      .insertTimeBetween(task.startTime!, task.endTime!)
+                      .insertTimeBetween(task.startTime!, endTime)
                       .filter()
                       .stateKeyEqualTo(goal.statePatterns[i].stateKey)
                       .valueProperty()
@@ -407,5 +412,26 @@ class AgentData {
       Log.log.warning('readStateOfGoal error: $e');
       return null;
     }
+  }
+
+  Future<List<String>> getLatestQuestionAskByUser(DateTime startTime,
+      {int num = 3}) async {
+    List<String> questions = [];
+    List<Message> messages = await DB.isar?.messages
+            .where()
+            .createdAtGreaterThan(startTime)
+            .filter()
+            .authorEqualTo(SettingValueConstants.me)
+            .sortByCreatedAtDesc()
+            .limit(num)
+            .findAll() ??
+        [];
+
+    for (Message message in messages) {
+      if (message.text.isNotEmpty) {
+        questions.add(message.text);
+      }
+    }
+    return questions;
   }
 }

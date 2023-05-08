@@ -7,6 +7,7 @@ import 'package:see_me_now/api/chatgpt/chatgpt_proxy.dart';
 import 'package:see_me_now/data/db.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:see_me_now/data/models/task.dart';
+import 'package:see_me_now/main.dart';
 import 'package:see_me_now/ml/agent/agent_prompts.dart';
 import 'package:see_me_now/ui/agent/ask_widget.dart';
 import 'package:see_me_now/tools/string_tools.dart';
@@ -15,9 +16,12 @@ class MyAction {
   SeeAction? act;
   Map<String, dynamic>? inputMap;
   String sysPromptText = '';
+  String parentMessageId = '';
   Map<String, dynamic>? outputMap;
   MyAction(int goalId, int taskId, ActionType type, String input,
-      {String sysPrompt = '', Map<String, dynamic> inMap = const {}}) {
+      {String sysPrompt = '',
+      Map<String, dynamic> inMap = const {},
+      String parentMessageId = ''}) {
     if (type == ActionType.none) {
       return;
     }
@@ -30,6 +34,7 @@ class MyAction {
     act = SeeAction()
       ..goalId = goalId
       ..taskId = taskId
+      ..cost = 1
       ..type = type;
     if (input.isEmpty) {
       if (inMap.isNotEmpty) {
@@ -57,8 +62,12 @@ class MyAction {
 
   Future<Map<String, dynamic>?> askGptInJson(
       String sysPromptText, Map<String, dynamic> inputMap) async {
-    String prompts = inputMap.toString();
-    String parentMessageId = '';
+    String prompts = '';
+    if (inputMap.isNotEmpty) {
+      prompts = inputMap.toString();
+    } else {
+      prompts = act!.input;
+    }
     for (var i = 0; i < 2; i++) {
       try {
         ChatGPTRes res = await DB.chatGPTProxy.sendMessage(
@@ -101,6 +110,8 @@ class MyAction {
     SeeAction? lastAction = DB.isar?.seeActions
         .where()
         .idNotEqualTo(act?.id ?? 0)
+        .filter()
+        .goalIdEqualTo(act?.goalId ?? 0)
         .sortByStartTimeDesc()
         .findFirstSync();
 
@@ -113,11 +124,19 @@ class MyAction {
   }
 
   Future<String> excute() async {
+    MyApp.goalManager.agentData.runningAction = true;
     if (act == null) {
+      MyApp.goalManager.agentData.runningAction = false;
       return '';
     }
     switch (act?.type) {
-      case ActionType.askUserForCreateTask:
+      case ActionType.askUserCommon:
+        if (act?.input == '') {
+          Log.log.warning('askUserCommon input is empty');
+          MyApp.goalManager.agentData.runningAction = false;
+          return '';
+        }
+
         // ask user for create task
         try {
           // act?.output = await Get.dialog(AskWidget(
@@ -142,6 +161,8 @@ class MyAction {
         break;
       case ActionType.askGptForCreateTask:
       case ActionType.askGptForNewExperience:
+      case ActionType.askGptForTaskProgressEvaluation:
+        act?.cost = 10;
         await askGptInJson(sysPromptText, inputMap!);
         break;
       case ActionType.queryRawData:
@@ -152,6 +173,7 @@ class MyAction {
     }
     act!.endTime = DateTime.now();
     saveToDB();
+    MyApp.goalManager.agentData.runningAction = false;
     return act!.output;
   }
 }

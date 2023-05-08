@@ -4788,6 +4788,19 @@ const SeeActionSchema = CollectionSchema(
           caseSensitive: false,
         )
       ],
+    ),
+    r'startTime': IndexSchema(
+      id: -3870335341264752872,
+      name: r'startTime',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'startTime',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
     )
   },
   links: {},
@@ -4897,7 +4910,7 @@ const _SeeActiontypeValueEnumMap = {
   1: ActionType.queryRawData,
   2: ActionType.queryStatsData,
   3: ActionType.search,
-  4: ActionType.askUserForCreateTask,
+  4: ActionType.askUserCommon,
   5: ActionType.askUserForEvaluation,
   6: ActionType.askUserForTaskProgress,
   7: ActionType.askUserForTaskReduce,
@@ -4943,6 +4956,14 @@ extension SeeActionQueryWhereSort
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'taskId'),
+      );
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhere> anyStartTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'startTime'),
       );
     });
   }
@@ -5190,6 +5211,96 @@ extension SeeActionQueryWhere
         lower: [lowerTaskId],
         includeLower: includeLower,
         upper: [upperTaskId],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> startTimeEqualTo(
+      DateTime startTime) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'startTime',
+        value: [startTime],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> startTimeNotEqualTo(
+      DateTime startTime) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startTime',
+              lower: [],
+              upper: [startTime],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startTime',
+              lower: [startTime],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startTime',
+              lower: [startTime],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'startTime',
+              lower: [],
+              upper: [startTime],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> startTimeGreaterThan(
+    DateTime startTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'startTime',
+        lower: [startTime],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> startTimeLessThan(
+    DateTime startTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'startTime',
+        lower: [],
+        upper: [startTime],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeAction, SeeAction, QAfterWhereClause> startTimeBetween(
+    DateTime lowerStartTime,
+    DateTime upperStartTime, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'startTime',
+        lower: [lowerStartTime],
+        includeLower: includeLower,
+        upper: [upperStartTime],
         includeUpper: includeUpper,
       ));
     });

@@ -11,7 +11,7 @@ enum ActionType {
   queryRawData,
   queryStatsData,
   search,
-  askUserForCreateTask,
+  askUserCommon,
   askUserForEvaluation,
   askUserForTaskProgress,
   askUserForTaskReduce,
@@ -113,6 +113,7 @@ class SeeAction {
   @enumerated
   ActionType type = ActionType.queryRawData;
 
+  @Index()
   DateTime startTime = DateTime.now();
   DateTime? endTime;
 

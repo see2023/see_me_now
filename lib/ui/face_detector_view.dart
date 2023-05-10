@@ -83,13 +83,13 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       if (faces.isNotEmpty && faces[0].smilingProbability != null) {
         // _text = 'Smile: ${faces[0].smilingProbability!.toStringAsFixed(3)}';
       }
-      Log.log.fine(_text);
+      Log.log.finest(_text);
     } else {
       String text = 'Faces found: ${faces.length}\n\n';
       for (final face in faces) {
         text += 'face: ${face.boundingBox}\n\n';
       }
-      Log.log.fine(text);
+      Log.log.finest(text);
       _text = text;
       _customPaint = null;
     }

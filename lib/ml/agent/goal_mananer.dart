@@ -488,7 +488,7 @@ text should be a string, if taskDiscription is Chinese, please reply in Chinese;
   "needMoreInfo": bool,
   "text": "...."
 }
-Responses should be short, less than 100 words, and can be parsed by Python json.loads, without any Note.
+Responses should be short, less than 100 words, please refer to the requested json format, only the json content is returned.
 ''',
     };
     MyAction action = MyAction(

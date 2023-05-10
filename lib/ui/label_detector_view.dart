@@ -106,7 +106,7 @@ class ImageLabelViewState extends State<ImageLabelView> {
             'Confidence: ${label.confidence.toStringAsFixed(2)}\n\n';
       }
       // _text = text;
-      Log.log.fine(text);
+      Log.log.finest(text);
     }
     _isBusy = false;
     if (mounted) {

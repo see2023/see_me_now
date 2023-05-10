@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'package:see_me_now/api/azure/azure_proxy.dart';
+import 'package:see_me_now/api/azure/bing.dart';
 import 'package:see_me_now/api/see_proxy.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:see_me_now/data/models/message.dart';
@@ -22,6 +23,7 @@ class DB {
   static Setting setting = Setting();
   static SeeProxy seeProxy = SeeProxy();
   static ChatGPTProxy chatGPTProxy = ChatGPTProxy();
+  static Bing bing = Bing();
   static AzureProxy azureProxy = AzureProxy();
   static bool status = false;
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");

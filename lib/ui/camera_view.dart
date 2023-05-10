@@ -244,11 +244,11 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     _lastDetect = uiThreadTimeStart;
 
     if (_predicting) {
-      Log.log.fine('Busy!  Skipping frame $frameCount');
+      Log.log.finest('Busy!  Skipping frame $frameCount');
       setState(() {});
       return;
     }
-    Log.log.fine('onLatestImageAvailable got frame $frameCount, check start');
+    Log.log.finest('onLatestImageAvailable got frame $frameCount, check start');
     _lastDetect = uiThreadTimeStart;
     _predicting = true;
     // setState(() {});
@@ -316,7 +316,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     }
     // set predicting to false to allow new frames
     _predicting = false;
-    Log.log.fine('onLatestImageAvailable frame $frameCount check finished');
+    Log.log.finest('onLatestImageAvailable frame $frameCount check finished');
     if (_appState != AppLifecycleState.paused && !_viewDisposed) {
       setState(() {});
     }

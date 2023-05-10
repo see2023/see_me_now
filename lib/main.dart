@@ -80,7 +80,7 @@ class _MyAppState extends State<MyApp> {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Log.setLevel(Level.ALL);
+  Log.setLevel(Level.FINE);
   await DB.init();
   if (DB.isRelease) {
     Log.setLevel(Level.INFO);

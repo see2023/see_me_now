@@ -27,7 +27,7 @@ class FaceDetectorPainter extends CustomPainter {
       //     'face box size: ${face.boundingBox.width}, ${face.boundingBox.height}, \n'
       //     'size: ${size.width} ${size.height},  absoluteImageSize: ${absoluteImageSize.width} ${absoluteImageSize.height}, \n'
       //     'rotation: $rotation');
-      Log.log.fine(
+      Log.log.finest(
           'face smile: ${face.smilingProbability}, left eye open: ${face.leftEyeOpenProbability}, right eye open: ${face.rightEyeOpenProbability}, \n'
           'face head eulerAngle: ${face.headEulerAngleX}, ${face.headEulerAngleY}, ${face.headEulerAngleZ},');
       canvas.drawRect(

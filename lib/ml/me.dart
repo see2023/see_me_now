@@ -75,7 +75,7 @@ class Me {
   // recieve data from camera(mlkit) and handle it
   static void handle(CameraData? data) async {
     if (data == null) return;
-    Log.log.fine(
+    Log.log.finest(
         'cameraDataBus recieveData, type: ${data.type}, lastPhase: ${data.lastPhase}');
     if (data.firstPhase) {
       statList.add(StatData());
@@ -124,7 +124,7 @@ class Me {
 
       MyApp.glbViewerStateKey.currentState!.sendMouthSmileMorphTargetInfluence(
           (statList[dataIndex].isSmile * 100).round());
-      Log.log.fine(
+      Log.log.finest(
           'latestStat from face and labels: ${MyApp.latestStat.currentStatus}');
       MyApp.latestStat.notify();
       if (DB.setting.enableAIReplyFromCamera) {

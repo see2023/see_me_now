@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
+import 'package:see_me_now/api/azure/bing.dart';
 import 'package:see_me_now/api/chatgpt/chatgpt_proxy.dart';
 import 'package:see_me_now/data/db.dart';
 import 'package:see_me_now/data/log.dart';
@@ -13,6 +14,9 @@ import 'package:see_me_now/ui/agent/ask_widget.dart';
 import 'package:see_me_now/tools/string_tools.dart';
 
 class MyAction {
+  static const int gptCost = 10;
+  static const int searchCost = 1;
+  static const int searchAndSummaryCost = 11;
   SeeAction? act;
   Map<String, dynamic>? inputMap;
   String sysPromptText = '';
@@ -162,11 +166,18 @@ class MyAction {
       case ActionType.askGptForCreateTask:
       case ActionType.askGptForNewExperience:
       case ActionType.askGptForTaskProgressEvaluation:
-        act?.cost = 10;
+        act?.cost = MyAction.gptCost.toDouble();
         await askGptInJson(sysPromptText, inputMap!);
         break;
       case ActionType.queryRawData:
         // query raw data from camera
+        break;
+      case ActionType.search:
+        outputMap = {};
+        List<BingRecord> records = await DB.bing.search(act?.input ?? '');
+        act?.output = records.toString();
+        act?.cost = MyAction.searchAndSummaryCost.toDouble();
+
         break;
       default:
         break;

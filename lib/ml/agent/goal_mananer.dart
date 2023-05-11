@@ -10,6 +10,7 @@ import 'package:see_me_now/ml/agent/agent_data.dart';
 import 'package:see_me_now/ml/agent/actions.dart';
 import 'package:see_me_now/ml/agent/agent_prompts.dart';
 import 'package:see_me_now/ml/me.dart';
+import 'package:see_me_now/tools/string_tools.dart';
 import 'package:see_me_now/ui/agent/goal_widget.dart';
 import 'package:see_me_now/ui/agent/txt_show_widget.dart';
 import 'package:see_me_now/ui/home_page.dart';
@@ -375,6 +376,12 @@ Ensure the response can be parsed by Python json.loads, without any Note.
       Log.log.warning('askGptForNewExperience output is not valid json, $e');
       return false;
     }
+    // if new experience is the same as the old one, then return false
+    if (compareList(experiences, experiencesUsed)) {
+      Log.log
+          .warning('askGptForNewExperience output is the same as the old one');
+      return false;
+    }
 
     // update experience
     double averageScore = 0.0;
@@ -480,13 +487,13 @@ Ensure the response can be parsed by Python json.loads, without any Note.
       'questions': questions,
       'experienceUsed': experiencesUsed,
       'envStates': goalState.envStates.map((e) => e.toString()).toList(),
-      'constraints': '''
-You should only respond in JSON format as described below:
+      'constraints':
+          '''You should only respond in JSON format as described below:
 needMoreInfo is a bool, if true, I will ask user to provide more information, if false, I will use the text to remind user,
 text should be a string, if taskDiscription is Chinese, please reply in Chinese; Otherwise, please use English.
 {
-  "needMoreInfo": bool,
-  "text": "...."
+  "type": "${AgentPromts.progressEvaluationMap.keys}",
+  "text": "${AgentPromts.progressEvaluationMap.values}"
 }
 Responses should be short, less than 100 words, please refer to the requested json format, only the json content is returned.
 ''',
@@ -495,48 +502,77 @@ Responses should be short, less than 100 words, please refer to the requested js
         goal.id, task.id, ActionType.askGptForTaskProgressEvaluation, '',
         inMap: inputMap, sysPrompt: sysPromts);
     await action.excute();
-    Log.log.fine('askGptForNewExperience output: ${action.act?.output}');
-    String text = '';
-    String parentMessageId = '';
+    Log.log
+        .fine('askGptForTaskProgressEvaluation output: ${action.act?.output}');
+    String gptReplyText = '';
+    bool replyOk = false;
+    String parentMessageId = action.parentMessageId;
+    // Perform up to 5 user inquiries or search operations based on the last return, then give the user a prompt
     try {
-      bool needMoreInfo = action.outputMap?['needMoreInfo'] ?? false;
-      text = action.outputMap?['text'] ?? '';
-      if (needMoreInfo && text.isNotEmpty) {
-        // ask user for more information
-        String userFeedback = await askUserCommon(goal, text);
-        if (userFeedback.isEmpty) {
-          Log.log.warning(
-              'askGptForNewExperience userFeedback is empty, ${action.act?.output}');
-          return false;
+      String nextInput = '';
+      for (int i = 0; i < 5; i++) {
+        switch (action.outputMap?['type']) {
+          case AgentPromts.progressKeyNeedMoreInfo:
+            nextInput = await askUserCommon(goal, gptReplyText);
+            if (nextInput.isEmpty) {
+              Log.log.warning(
+                  'try time $i, askGptForTaskProgressEvaluation userFeedback is empty');
+              return false;
+            }
+            Log.log.info(
+                'try time $i, askGptForTaskProgressEvaluation userFeedback: $nextInput');
+            break;
+          case AgentPromts.progressKeyNeedSearch:
+            MyAction subAction = MyAction(
+                goal.id, task.id, ActionType.search, gptReplyText,
+                sysPrompt: sysPromts, parentMessageId: parentMessageId);
+            await subAction.excute();
+            Log.log.info(
+                'try time $i, askGptForTaskProgressEvaluation search output: ${subAction.act?.output}');
+            nextInput = subAction.act?.output ?? '';
+            if (nextInput.isEmpty) {
+              Log.log.warning(
+                  'try time $i, askGptForTaskProgressEvaluation search output is empty, ${subAction.act?.output}');
+              return false;
+            }
+            break;
+          case AgentPromts.progressKeyReplyToUser:
+            gptReplyText = action.outputMap?['text'] ?? '';
+            if (gptReplyText.isEmpty) {
+              Log.log.warning(
+                  'try time $i, askGptForTaskProgressEvaluation gptReplyText is empty, ${action.act?.output}');
+              return false;
+            }
+            replyOk = true;
+            break;
+          default:
+            Log.log.warning(
+                'try time $i, askGptForTaskProgressEvaluation type is wrong, ${action.act?.output}');
+            return false;
         }
-        parentMessageId = action.parentMessageId;
-        MyAction action2 = MyAction(goal.id, task.id,
-            ActionType.askGptForTaskProgressEvaluation, userFeedback,
+        if (replyOk) {
+          break;
+        }
+        action = MyAction(goal.id, task.id,
+            ActionType.askGptForTaskProgressEvaluation, nextInput,
             sysPrompt: sysPromts, parentMessageId: parentMessageId);
-        await action2.excute();
-        needMoreInfo = action.outputMap?['needMoreInfo'] ?? false;
-        text = action.outputMap?['text'] ?? '';
-        if (!needMoreInfo && text.isNotEmpty) {
-          // use text to remind user
-        } else {
-          Log.log.warning(
-              'askGptForNewExperience (needMoreInfo) output error, ${action.act?.output}');
-          return false;
-        }
-      } else if (!needMoreInfo && text.isNotEmpty) {
-        // use text to remind user
-      } else {
-        Log.log.warning(
-            'askGptForNewExperience output error, ${action.act?.output}');
-        return false;
+        await action.excute();
+        parentMessageId = action.parentMessageId;
+        Log.log.fine(
+            'try time $i, askGptForTaskProgressEvaluation gpt output: ${action.act?.output}');
       }
     } catch (e) {
-      Log.log.warning('askGptForNewExperience output is not valid json, $e');
+      Log.log.warning('askGptForTaskProgressEvaluation error, $e');
       return false;
     }
 
     // show text to user
-    await showTextToUser(text: text, messageId: parentMessageId);
+    if (!replyOk) {
+      Log.log.warning(
+          'askGptForTaskProgressEvaluation replyOk is false, ${action.act?.output}');
+      return false;
+    }
+    await showTextToUser(text: gptReplyText, messageId: parentMessageId);
     return true;
   }
 

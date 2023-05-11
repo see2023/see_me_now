@@ -7,6 +7,14 @@ class AgentPromts {
     StateKey.upright: 'sitting upright',
     StateKey.smile: 'smile'
   };
+  static const String progressKeyReplyToUser = 'replyToUser';
+  static const String progressKeyNeedMoreInfo = 'needMoreInfo';
+  static const String progressKeyNeedSearch = 'needSearch';
+  static Map<String, String> progressEvaluationMap = {
+    'replyToUser': 'Tips for user',
+    'needMoreInfo': 'What do you need to know from user',
+    'needSearch': 'Search terms'
+  };
   static String gptPromptPrefix = '''
 I hope you play the role of an intelligent decision assistant, helping users achieve their goals. 
 Each time you will receive a JSON input, analyze the goal and current situation, provide appropriate suggestions, and output the conclusions in the required JSON format. 
@@ -55,9 +63,10 @@ This time, you will obtain these fields from input JSON:
     the correlation values obtained from the external environment during the completion of the task: valueNow, 
     and the values of the same goal from the previous three days for comparison: valueBefore,
     positive = true here means that the higher score is better, vice versa.
-Based on the above information, you need to assess the user's status and give reasonable advice to ensure that the task is completed on time; 
-if you feel that the information is not enough to assess the current situation, you can also ask the user once for his or her own feedback and then give definitive advice, 
-including progress reminders, secondary task discards, reminders of relevant knowledge, etc.
+1) Based on the above information, you need to assess the user's status and give reasonable advice to ensure that the task is completed on time with type=replyToUser;
+or 2) if you feel that the information is not enough to assess the current situation, you can also ask the user feedback with type=needMoreInfo;
+or 3) Your knowledge is only available until September 2021, the current time is, if you need to search for newer information, please return to type=needSearch.
+Please cherish the resources and don't caught in the Q&A cycle.
 The output should be in the required json format.
 """
   };

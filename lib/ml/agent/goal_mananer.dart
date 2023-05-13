@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,7 +19,7 @@ import 'package:see_me_now/ui/home_page.dart';
 
 class GoalManager extends GetxController {
   static double maxCostPerTask = 1000;
-  static int maxActionsPerTask = 20;
+  static int maxActionsPerTask = 200;
   static int minCheckProgressInterval = 10 * 60;
 
   late Timer _timer;
@@ -186,13 +188,20 @@ class GoalManager extends GetxController {
     return await askUserCommon(goal, showText);
   }
 
-  Future<String> askUserCommon(SeeGoal goal, String inputText) async {
+  Future<String> askUserCommon(SeeGoal goal, String inputText,
+      {int taskId = 0}) async {
     MyAction action = MyAction(goal.id, 0, ActionType.askUserCommon, inputText);
     homeCon.setInSubWindow(true);
     await action.excute();
     homeCon.setInSubWindow(false);
     Log.log
         .fine('askUserCommon input:$inputText, output: ${action.act?.output}');
+    if (taskId > 0 && action.act != null && action.act!.output.isNotEmpty) {
+      await agentData.saveConversation(goal.id, taskId, inputText,
+          from: AgentData.conversationIdAssistant);
+      await agentData.saveConversation(goal.id, taskId, action.act!.output,
+          from: AgentData.conversationIdUser);
+    }
     return action.act?.output ?? '';
   }
 
@@ -225,14 +234,17 @@ Based on the userInput task description, you can divide the main task into 2-3 s
 ]
 }
 Note that this refers to specific tasks, not experiences.
-Ensure the response can be parsed by Python json.loads, without any Note.
+Please return tasks in strict accordance with the above json format.
 ''',
     };
     String sysPromts =
         AgentPromts.agentPrompts[ActionType.askGptForCreateTask]!;
     // sysPromts += DB.promptsMap[DB.defaultPromptId]?.text ?? '';
     MyAction action = MyAction(goal.id, 0, ActionType.askGptForCreateTask, '',
-        inMap: inputMap, sysPrompt: sysPromts);
+        inMap: inputMap,
+        sysPrompt: sysPromts,
+        outputJsonFormat:
+            '{"tasks": [{ "description": "string", "estimatedTimeInMinutes": "number" }]}');
     await action.excute();
     Log.log.fine('askGptForTasks output: ${action.act?.output}');
     try {
@@ -357,12 +369,14 @@ an array A similar experience after optimization:
     "experience 1", "experience 2", "experience 3"
   ]
 }
-Ensure the response can be parsed by Python json.loads, without any Note.
+Every experience should be short, less than 100 words, please refer to the requested json format, only the json content is returned.
 ''',
     };
     MyAction action = MyAction(
         goal.id, 0, ActionType.askGptForNewExperience, '',
-        inMap: inputMap, sysPrompt: sysPromts);
+        inMap: inputMap,
+        sysPrompt: sysPromts,
+        outputJsonFormat: '{"experiences": []}');
     await action.excute();
     Log.log.fine('askGptForNewExperience output: ${action.act?.output}');
     try {
@@ -395,13 +409,7 @@ Ensure the response can be parsed by Python json.loads, without any Note.
       scoreCount++;
     }
     averageScore = averageScore / scoreCount;
-    await DB.isar?.writeTxn(() async {
-      int? newId = await DB.isar?.seeGoalExperiences.put(SeeGoalExperiences()
-        ..goalId = goal.id
-        ..score = averageScore.round()
-        ..experiences = experiences);
-      Log.log.fine('askGptForNewExperience newId: $newId');
-    });
+    await agentData.saveExperience(goal, averageScore.round(), experiences);
     return true;
   }
 
@@ -462,6 +470,33 @@ Ensure the response can be parsed by Python json.loads, without any Note.
     return 0;
   }
 
+  List<List<String>> generateProgressEvaluationReactions(
+      int questionCount, double timeRatio) {
+    // sample progressEvaluationMap keys and values according to current questions and times
+    List<String> keys = AgentPromts.progressEvaluationMap.keys.toList();
+    List<String> values = [];
+    Map<String, String> addtionMap = {};
+    for (int i = 0; i < keys.length; i++) {
+      addtionMap[keys[i]] = '';
+    }
+    const String notRecommendKey = '(Not recommended)';
+    const String recommendKey = '(recommended)';
+    // remove quiz
+    keys.remove(AgentPromts.progressKeyQuiz);
+    if (questionCount < 1) {
+      addtionMap[AgentPromts.progressKeyNeedSearch] = notRecommendKey;
+    } else {
+      if (Random().nextDouble() < 0.3) {
+        addtionMap[AgentPromts.progressKeyNeedSearch] = recommendKey;
+      }
+    }
+    for (int i = 0; i < keys.length; i++) {
+      values.add(AgentPromts.progressEvaluationMap[keys[i]]! +
+          (addtionMap[keys[i]] ?? ''));
+    }
+    return [keys, values];
+  }
+
   Future<bool> askGptForTaskProgressEvaluation(
       SeeGoal goal, SeeTask task) async {
     GoalState? goalState = await agentData.readStateOfGoal(goal);
@@ -472,9 +507,23 @@ Ensure the response can be parsed by Python json.loads, without any Note.
     }
     List<String> questions = await agentData
         .getLatestQuestionAskByUser(task.startTime ?? task.insertTime);
+    List<String> conversations =
+        await agentData.getConversation(goal.id, task.id);
     String sysPromts =
         AgentPromts.agentPrompts[ActionType.askGptForTaskProgressEvaluation]!;
     List<String> experiencesUsed = await agentData.getExperience(goal.id);
+    List<List<String>> reactions = generateProgressEvaluationReactions(
+        questions.length + conversations.length,
+        agentData.getTimeSpentRatio(task));
+    if (reactions[0].isEmpty) {
+      Log.log.info(
+          'askGptForTaskProgressEvaluation reactions is empty, goal: ${goal.name}, task: ${task.description}');
+      return false;
+    }
+    String keysStr = jsonEncode(reactions[0]);
+    String outputJsonFormat =
+        '{"type": "string", "text|(quesion, answer)": "string"}';
+    String valuesStr = jsonEncode(reactions[1]);
     // ask gpt for new experience
     Map<String, dynamic> inputMap = {
       'goalName': goalState.goalName,
@@ -484,33 +533,47 @@ Ensure the response can be parsed by Python json.loads, without any Note.
       'timeSpent': DateTime.now()
           .difference(task.startTime ?? task.insertTime)
           .inMinutes,
-      'questions': questions,
+      'conversations': conversations,
+      'minorConversations': questions,
       'experienceUsed': experiencesUsed,
       'envStates': goalState.envStates.map((e) => e.toString()).toList(),
       'constraints':
           '''You should only respond in JSON format as described below:
-needMoreInfo is a bool, if true, I will ask user to provide more information, if false, I will use the text to remind user,
+type is string as action type,
 text should be a string, if taskDiscription is Chinese, please reply in Chinese; Otherwise, please use English.
 {
-  "type": "${AgentPromts.progressEvaluationMap.keys}",
-  "text": "${AgentPromts.progressEvaluationMap.values}"
+  "type": "$keysStr",
+  "text": "$valuesStr"
 }
+or
+{
+  "type": "quiz",
+  "question": "...",
+  "answer": "..."
+}
+
 Responses should be short, less than 100 words, please refer to the requested json format, only the json content is returned.
 ''',
     };
     MyAction action = MyAction(
         goal.id, task.id, ActionType.askGptForTaskProgressEvaluation, '',
-        inMap: inputMap, sysPrompt: sysPromts);
+        inMap: inputMap,
+        sysPrompt: sysPromts,
+        outputJsonFormat: outputJsonFormat);
     await action.excute();
     Log.log
         .fine('askGptForTaskProgressEvaluation output: ${action.act?.output}');
     String gptReplyText = '';
+    String question = '';
+    String answer = '';
     bool replyOk = false;
+    bool isQuiz = false;
     String parentMessageId = action.parentMessageId;
-    // Perform up to 5 user inquiries or search operations based on the last return, then give the user a prompt
+    // Perform up to 3 user inquiries or search operations based on the last return, then give the user a prompt
     try {
       String nextInput = '';
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 3; i++) {
+        gptReplyText = action.outputMap?['text'] ?? '';
         switch (action.outputMap?['type']) {
           case AgentPromts.progressKeyNeedMoreInfo:
             nextInput = await askUserCommon(goal, gptReplyText);
@@ -525,7 +588,7 @@ Responses should be short, less than 100 words, please refer to the requested js
           case AgentPromts.progressKeyNeedSearch:
             MyAction subAction = MyAction(
                 goal.id, task.id, ActionType.search, gptReplyText,
-                sysPrompt: sysPromts, parentMessageId: parentMessageId);
+                sysPrompt: sysPromts, parentMessageIdIn: parentMessageId);
             await subAction.excute();
             Log.log.info(
                 'try time $i, askGptForTaskProgressEvaluation search output: ${subAction.act?.output}');
@@ -536,8 +599,18 @@ Responses should be short, less than 100 words, please refer to the requested js
               return false;
             }
             break;
-          case AgentPromts.progressKeyReplyToUser:
-            gptReplyText = action.outputMap?['text'] ?? '';
+          case AgentPromts.progressKeyQuiz:
+            isQuiz = true;
+            question = action.outputMap?['question'] ?? '';
+            answer = action.outputMap?['answer'] ?? '';
+            if (question.isEmpty) {
+              Log.log.warning(
+                  'try time $i, askGptForTaskProgressEvaluation question is empty, ${action.act?.output}');
+              return false;
+            }
+            replyOk = true;
+            break;
+          case AgentPromts.progressKeyTipsToUser:
             if (gptReplyText.isEmpty) {
               Log.log.warning(
                   'try time $i, askGptForTaskProgressEvaluation gptReplyText is empty, ${action.act?.output}');
@@ -553,9 +626,14 @@ Responses should be short, less than 100 words, please refer to the requested js
         if (replyOk) {
           break;
         }
+        nextInput = '''$nextInput
+---
+Remember to reply in JSON format as described below:
+$outputJsonFormat
+''';
         action = MyAction(goal.id, task.id,
             ActionType.askGptForTaskProgressEvaluation, nextInput,
-            sysPrompt: sysPromts, parentMessageId: parentMessageId);
+            sysPrompt: sysPromts, parentMessageIdIn: parentMessageId);
         await action.excute();
         parentMessageId = action.parentMessageId;
         Log.log.fine(
@@ -572,25 +650,58 @@ Responses should be short, less than 100 words, please refer to the requested js
           'askGptForTaskProgressEvaluation replyOk is false, ${action.act?.output}');
       return false;
     }
-    await showTextToUser(text: gptReplyText, messageId: parentMessageId);
+    await showTextToUser(
+        text: gptReplyText,
+        messageId: parentMessageId,
+        goalId: goal.id,
+        taskId: task.id,
+        isQuiz: isQuiz,
+        question: question,
+        answer: answer);
     return true;
   }
 
-  Future<bool> showTextToUser(
-      {bool showAvatar = true,
-      String text = '',
-      String messageId = '',
-      List<String> strings = const [],
-      Map<String, dynamic> map = const {}}) async {
+  Future<bool> showTextToUser({
+    bool showAvatar = true,
+    String text = '',
+    String messageId = '',
+    List<String> strings = const [],
+    Map<String, dynamic> map = const {},
+    int goalId = 0,
+    int taskId = 0,
+    bool isQuiz = false,
+    String question = '',
+    String answer = '',
+  }) async {
     if (showAvatar) {
+      if (isQuiz) {
+        text = question;
+      }
       Me.defaultSpeaker.talk(text, messageId: messageId);
     }
+    if (isQuiz) {
+      text = 'question: $question\n answer: $answer';
+    }
+    if (goalId > 0 && taskId > 0) {
+      await agentData.saveConversation(goalId, taskId, text);
+    }
     homeCon.setInSubWindow(true);
-    await showDialog(
-      barrierColor: Colors.transparent,
-      context: Get.context!,
-      builder: (_) => TxtShowWidget(text: text),
-    );
+    if (isQuiz) {
+      await showDialog(
+        barrierColor: Colors.transparent,
+        context: Get.context!,
+        builder: (_) => QuizWidget(
+          question: question,
+          answer: answer,
+        ),
+      );
+    } else {
+      await showDialog(
+        barrierColor: Colors.transparent,
+        context: Get.context!,
+        builder: (_) => TxtShowWidget(text: text),
+      );
+    }
     homeCon.setInSubWindow(false);
     return true;
   }

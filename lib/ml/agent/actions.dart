@@ -20,12 +20,14 @@ class MyAction {
   SeeAction? act;
   Map<String, dynamic>? inputMap;
   String sysPromptText = '';
+  String outputJsonFormat = '';
   String parentMessageId = '';
   Map<String, dynamic>? outputMap;
   MyAction(int goalId, int taskId, ActionType type, String input,
       {String sysPrompt = '',
       Map<String, dynamic> inMap = const {},
-      String parentMessageId = ''}) {
+      String parentMessageIdIn = '',
+      String outputJsonFormat = ''}) {
     if (type == ActionType.none) {
       return;
     }
@@ -34,6 +36,8 @@ class MyAction {
     } else {
       sysPromptText = sysPrompt;
     }
+    parentMessageId = parentMessageIdIn;
+    outputJsonFormat = outputJsonFormat;
     inputMap = inMap;
     act = SeeAction()
       ..goalId = goalId
@@ -68,7 +72,8 @@ class MyAction {
       String sysPromptText, Map<String, dynamic> inputMap) async {
     String prompts = '';
     if (inputMap.isNotEmpty) {
-      prompts = inputMap.toString();
+      // prompts = inputMap.toString();
+      prompts = jsonEncode(inputMap);
     } else {
       prompts = act!.input;
     }
@@ -97,7 +102,11 @@ class MyAction {
           Log.log.fine('$i askGpt return: ${res.text}');
           return outputMap;
         } catch (e) {
-          prompts = AgentPromts.askForJson;
+          if (outputJsonFormat != '') {
+            prompts = '${AgentPromts.askForJson}:$outputJsonFormat';
+          } else {
+            prompts = AgentPromts.askForJson;
+          }
           Log.log.warning('$i askGpt json parse error: ${res.text}}');
           continue;
         }

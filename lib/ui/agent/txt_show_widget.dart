@@ -68,3 +68,62 @@ class TxtShowWidget extends StatelessWidget {
     );
   }
 }
+
+// show quiz (question and answer)
+// with a button click to show answer
+class QuizWidget extends StatefulWidget {
+  final String? question;
+  final String? answer;
+  const QuizWidget({Key? key, this.question, this.answer}) : super(key: key);
+
+  @override
+  State<QuizWidget> createState() => _QuizWidgetState();
+}
+
+class _QuizWidgetState extends State<QuizWidget> {
+  bool showAnswer = false;
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: Opacity(
+        opacity: 0.75,
+        child: Stack(children: [
+          Container(
+            // margin: const EdgeInsets.all(5),
+            padding:
+                const EdgeInsets.only(top: 95, left: 10, right: 5, bottom: 20),
+            child: Column(
+              children: [
+                AwsomeText(text: widget.question),
+                const SizedBox(height: 20),
+                showAnswer
+                    ? AwsomeText(text: widget.answer)
+                    : ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            showAnswer = true;
+                          });
+                        },
+                        child: Text('ShowAnswer'.tr),
+                      ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 50,
+            left: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              color: Colors.white70,
+              iconSize: 36,
+              onPressed: () {
+                Get.back();
+              },
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+}

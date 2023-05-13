@@ -10,6 +10,7 @@ class Messages extends Translations {
           'ChineseHomework': 'Chinese homework',
           'SportAndRelax': 'Sports and relaxation',
           'ReplyLanguage': 'Please reply in English.',
+          'ShowAnswer': 'Show answer',
         },
         'zh_CN': {
           'askUserForTasks': '你今天有什么 @name 的计划吗?',
@@ -18,6 +19,7 @@ class Messages extends Translations {
           'ChineseHomework': '语文作业',
           'SportAndRelax': '运动与放松',
           'ReplyLanguage': 'Please reply in Chinese.',
+          'ShowAnswer': '显示答案',
         },
       };
 }

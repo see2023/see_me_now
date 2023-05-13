@@ -59,7 +59,8 @@ class DB {
         SeeGoalExperiencesSchema,
         SeeTaskSchema,
         SeeActionSchema,
-        MeStateHistorySchema
+        MeStateHistorySchema,
+        ConversationSchema
       ]);
       seeProxy.setParam(
           user: setting.getString(SettingKeyConstants.seeProxyUser),

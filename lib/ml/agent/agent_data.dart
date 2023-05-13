@@ -44,15 +44,15 @@ class GoalStateIndex {
 
 class TaskScore {
   String taskDescription = '';
-  int estimatedTime = 0;
-  int timeSpent = 0;
+  int estimatedTimeInMinutes = 0;
+  int timeSpentInMinutes = 0;
   double score = 0;
   @override
   String toString() {
     return jsonEncode({
       'taskDescription': taskDescription,
-      'estimatedTime': estimatedTime,
-      'timeSpent': timeSpent,
+      'estimatedTimeInMinutes': estimatedTimeInMinutes,
+      'timeSpentInMinutes': timeSpentInMinutes,
       'score': score,
     });
   }
@@ -75,6 +75,8 @@ class GoalState {
 }
 
 class AgentData {
+  static const String conversationIdUser = 'user';
+  static const String conversationIdAssistant = 'assistant';
   int runningTaskId = 0;
   int runningGoalId = 0;
   bool runningAction = false;
@@ -316,6 +318,18 @@ class AgentData {
     return experience;
   }
 
+  Future<bool> saveExperience(
+      SeeGoal goal, int score, List<String> experiences) async {
+    await DB.isar?.writeTxn(() async {
+      int? newId = await DB.isar?.seeGoalExperiences.put(SeeGoalExperiences()
+        ..goalId = goal.id
+        ..score = score
+        ..experiences = experiences);
+      Log.log.fine('saveExperience: newId $newId');
+    });
+    return true;
+  }
+
   Future<List<String>> getTasksOfLastDay(int goalId) async {
     String yesterday = DateTime.now()
         .subtract(const Duration(days: 1))
@@ -332,6 +346,25 @@ class AgentData {
     return tasks;
   }
 
+  int getTimeSpentInMinutes(SeeTask task) {
+    if (task.startTime == null) {
+      return 0;
+    }
+    DateTime endTime = task.endTime ?? DateTime.now();
+    return endTime.difference(task.startTime!).inMinutes;
+  }
+
+  double getTimeSpentRatio(SeeTask task) {
+    if (task.estimatedTimeInMinutes == 0) {
+      return 0;
+    }
+    int timeSpent = getTimeSpentInMinutes(task);
+    if (timeSpent == 0) {
+      return 0;
+    }
+    return timeSpent / task.estimatedTimeInMinutes;
+  }
+
   Future<GoalState?> readStateOfGoal(SeeGoal goal) async {
     try {
       GoalState goalState = GoalState();
@@ -346,13 +379,8 @@ class AgentData {
         }
         TaskScore taskState = TaskScore();
         taskState.taskDescription = task.description;
-        taskState.estimatedTime = task.estimatedTimeInMinutes;
-        if (task.startTime == null) {
-          taskState.timeSpent = 0;
-        } else {
-          DateTime endTime = task.endTime ?? DateTime.now();
-          taskState.timeSpent = endTime.difference(task.startTime!).inMinutes;
-        }
+        taskState.estimatedTimeInMinutes = task.estimatedTimeInMinutes;
+        taskState.timeSpentInMinutes = getTimeSpentInMinutes(task);
         taskState.score = task.score.toDouble();
         goalState.taskScores.add(taskState);
       }
@@ -383,7 +411,8 @@ class AgentData {
           int stateCount = 0;
           for (int j = 0; j < goal.tasks.length; j++) {
             SeeTask? task = tasksMap[goal.tasks[j]];
-            if (task == null || goalState.taskScores[j].timeSpent == 0) {
+            if (task == null ||
+                goalState.taskScores[j].timeSpentInMinutes == 0) {
               continue;
             }
             DateTime endTime = task.endTime ?? DateTime.now();
@@ -415,23 +444,69 @@ class AgentData {
   }
 
   Future<List<String>> getLatestQuestionAskByUser(DateTime startTime,
-      {int num = 3}) async {
+      {int num = 4}) async {
+    // It's from messages, unlike conversion
     List<String> questions = [];
     List<Message> messages = await DB.isar?.messages
             .where()
             .createdAtGreaterThan(startTime)
             .filter()
-            .authorEqualTo(SettingValueConstants.me)
+            .textIsNotEmpty()
             .sortByCreatedAtDesc()
             .limit(num)
             .findAll() ??
         [];
 
-    for (Message message in messages) {
-      if (message.text.isNotEmpty) {
-        questions.add(message.text);
+    for (int i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].author == SettingValueConstants.me) {
+        questions.add('${AgentData.conversationIdUser}: ${messages[i].text}');
+      } else {
+        // Only the full question is returned, the answer cut to 32 characters
+        String msg = messages[i].text;
+        if (msg.length > 32) {
+          msg = '${msg.substring(0, 32)}...';
+        }
+        questions.add('${AgentData.conversationIdAssistant}: $msg');
       }
     }
+
     return questions;
+  }
+
+  Future<bool> saveConversation(int goalId, int taskId, String text,
+      {String from = conversationIdAssistant}) async {
+    try {
+      await DB.isar?.writeTxn(() async {
+        await DB.isar?.conversations.put(Conversation()
+          ..goalId = goalId
+          ..taskId = taskId
+          ..text = text
+          ..from = from);
+      });
+      return true;
+    } catch (e) {
+      Log.log.warning('saveConversation error: $e');
+      return false;
+    }
+  }
+
+  // get tips of this goal and this task
+  Future<List<String>> getConversation(int goalId, int taskId,
+      {int num = 6}) async {
+    List<Conversation> tips = await DB.isar?.conversations
+            .where()
+            .goalIdEqualTo(goalId)
+            .filter()
+            .taskIdEqualTo(taskId)
+            .sortByInsertTimeDesc()
+            .limit(num)
+            .findAll() ??
+        [];
+
+    List<String> texts = [];
+    for (Conversation tip in tips) {
+      texts.add('${tip.from}: ${tip.text}');
+    }
+    return texts;
   }
 }

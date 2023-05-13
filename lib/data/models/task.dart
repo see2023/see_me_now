@@ -136,3 +136,21 @@ class MeStateHistory {
 
   float value = 0.0;
 }
+
+@collection
+class Conversation {
+  Id id = Isar.autoIncrement;
+
+  @Index()
+  int goalId = 0;
+
+  @Index()
+  int taskId = 0;
+
+  @Index()
+  DateTime insertTime = DateTime.now();
+
+  String from = 'AI';
+
+  String text = '';
+}

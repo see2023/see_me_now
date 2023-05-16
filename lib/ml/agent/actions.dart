@@ -82,7 +82,6 @@ class MyAction {
         ChatGPTRes res = await DB.chatGPTProxy.sendMessage(
             prompts,
             parentMessageId,
-            '',
             DB.promptsMap[DB.firstPromptId]?.model ?? '',
             sysPromptText,
             true);

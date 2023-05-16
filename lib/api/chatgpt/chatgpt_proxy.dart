@@ -39,22 +39,14 @@ class ChatGPTProxy {
 	  }
 	}
   */
-  Future<ChatGPTRes> sendMessage(
-      String text,
-      String parentMessageId,
-      String conversationId,
-      String model,
-      String systemMessage,
-      bool firstMessage) async {
+  Future<ChatGPTRes> sendMessage(String text, String parentMessageId,
+      String model, String systemMessage, bool firstMessage) async {
     var rt = ChatGPTRes();
     try {
       status = false;
       var request = SeeProxy.genRequest(text);
       if (parentMessageId.isNotEmpty) {
         request['parentMessageId'] = parentMessageId;
-      }
-      if (conversationId.isNotEmpty) {
-        request['conversationId'] = conversationId;
       }
       if (model.isNotEmpty) {
         request['model'] = model;

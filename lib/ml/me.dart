@@ -127,8 +127,11 @@ class Me {
       Log.log.finest(
           'latestStat from face and labels: ${MyApp.latestStat.currentStatus}');
       MyApp.latestStat.notify();
-      if (DB.setting.enableAIReplyFromCamera) {
-        defaultSpeaker.gotData(statList);
+
+      // ignore: dead_code
+      if (DB.setting.enableAIReplyFromCamera && false) {
+        // Test the raw data processing capability of gpt, skip
+        defaultSpeaker.gotRawData(statList);
       } else {
         notifyByRule(dataIndex);
       }
@@ -149,9 +152,15 @@ class Me {
       if (MyApp.latestStat.askewCount % statusChangeCount == 0) {
         MyApp.latestStat.nobodyCount = 0;
         MyApp.latestStat.uprightCount = 0;
-        if (DB.setting.enablePoseReminder) {
-          VoiceAssistant.notifyAskew(
-              MyApp.latestStat.askewCount ~/ statusChangeCount);
+        int times = MyApp.latestStat.askewCount ~/ statusChangeCount;
+        if (times == 1 || times % 10 == 0) {
+          if (DB.setting.enablePoseReminder) {
+            if (DB.setting.enableAIReplyFromCamera) {
+              defaultSpeaker.notifyAskew();
+            } else {
+              VoiceAssistant.notifyAskew();
+            }
+          }
         }
       }
     } else if (statList[dataIndex].status == MyStatus.upright) {
@@ -164,8 +173,9 @@ class Me {
         MyApp.latestStat.nobodyCount = 0;
         MyApp.latestStat.askewCount = 0;
         if (DB.setting.enablePoseReminder) {
-          VoiceAssistant.notifyUpright(
-              MyApp.latestStat.uprightCount ~/ statusChangeCount);
+          // skip upright reminder because too frequent reminder is annoying
+          // VoiceAssistant.notifyUpright(
+          //     MyApp.latestStat.uprightCount ~/ statusChangeCount);
         }
       }
     } else if (statList[dataIndex].status == MyStatus.nobody) {

@@ -23,16 +23,14 @@ class VoiceAssistant {
     }
   }
 
-  static void notifyAskew(int times) async {
-    if (times == 1 || times % 5 == 0) {
-      if (sysPlaying) {
-        await sysPlayer.stop();
-      }
-      sysPlaying = true;
-      await sysPlayer.setUrl('asset:///assets/wav/hurryup.wav');
-      await sysPlayer.play();
-      sysPlaying = false;
+  static void notifyAskew() async {
+    if (sysPlaying) {
+      await sysPlayer.stop();
     }
+    sysPlaying = true;
+    await sysPlayer.setUrl('asset:///assets/wav/hurryup.wav');
+    await sysPlayer.play();
+    sysPlaying = false;
   }
 
   static void setListener() {

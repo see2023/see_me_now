@@ -209,7 +209,6 @@ class _ChatWidgetState extends State<ChatWidget> {
         .sendMessage(
             textMessage.text,
             _apis[0].parentMessageId ?? '',
-            _apis[0].conversationId ?? '',
             // _apis[0].model ?? '', // only one api now ...
             DB.promptsMap[_promptIdUsed]?.model ?? '',
             DB.promptsMap[_promptIdUsed]?.text ?? '',

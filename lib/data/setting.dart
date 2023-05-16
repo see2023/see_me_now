@@ -2,6 +2,7 @@ import 'package:see_me_now/data/constants.dart';
 import 'package:hive/hive.dart';
 import 'package:see_me_now/data/db.dart';
 import 'package:see_me_now/data/log.dart';
+import 'package:see_me_now/ml/agent/agent_prompts.dart';
 
 class SettingKeyConstants {
   static const String seeProxyUrlPrefix = 'seeProxyUrlPrefix';
@@ -13,14 +14,18 @@ class SettingKeyConstants {
   static const String enableAIReplyFromCamera = 'enableAIReplyFromCamera';
   static const String enablePoseReminder = 'enablePoseReminder';
   static const String defaultPromptId = 'defaultPromptId';
+  static const String userNickname = 'userNickname';
+  static const String userDescription = 'userDescription';
 }
 
 class Setting {
   bool autoPlayVoice = false;
   bool tapPlayVoice = true;
   bool enableCamera = true;
-  bool enableAIReplyFromCamera = false;
+  bool enableAIReplyFromCamera = true;
   bool enablePoseReminder = true;
+  String userNickname = '';
+  String userDescription = '';
   Box? _settingsBox;
   init(String settingFilePath) async {
     Hive.init(settingFilePath);
@@ -42,9 +47,15 @@ class Setting {
     DB.setting.enableCamera =
         _settingsBox?.get(SettingKeyConstants.enableCamera) ?? true;
     DB.setting.enableAIReplyFromCamera =
-        _settingsBox?.get(SettingKeyConstants.enableAIReplyFromCamera) ?? false;
+        _settingsBox?.get(SettingKeyConstants.enableAIReplyFromCamera) ?? true;
     DB.setting.enablePoseReminder =
-        _settingsBox?.get(SettingKeyConstants.enablePoseReminder) ?? false;
+        _settingsBox?.get(SettingKeyConstants.enablePoseReminder) ?? true;
+    DB.setting.userNickname =
+        _settingsBox?.get(SettingKeyConstants.userNickname) ?? '普罗米修斯';
+    DB.setting.userDescription =
+        _settingsBox?.get(SettingKeyConstants.userDescription) ?? 'a pupil';
+    AgentPromts.changeGptPromptPrefix(
+        DB.setting.userNickname, DB.setting.userDescription);
   }
 
   close() {
@@ -93,6 +104,20 @@ class Setting {
         DB.setting.enablePoseReminder = value == 'true';
         _settingsBox?.put(SettingKeyConstants.enablePoseReminder,
             DB.setting.enablePoseReminder);
+        break;
+      case SettingKeyConstants.userNickname:
+        DB.setting.userNickname = value;
+        _settingsBox?.put(
+            SettingKeyConstants.userNickname, DB.setting.userNickname);
+        AgentPromts.changeGptPromptPrefix(
+            DB.setting.userNickname, DB.setting.userDescription);
+        break;
+      case SettingKeyConstants.userDescription:
+        DB.setting.userDescription = value;
+        _settingsBox?.put(
+            SettingKeyConstants.userDescription, DB.setting.userDescription);
+        AgentPromts.changeGptPromptPrefix(
+            DB.setting.userNickname, DB.setting.userDescription);
         break;
     }
   }

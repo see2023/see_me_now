@@ -65,15 +65,17 @@ class _SettingWidgetState extends State<SettingWidget> {
     return Form(
       key: _formKey,
       child: CardSettings(
+        padding: const EdgeInsets.all(0),
+        margin: const EdgeInsets.all(0),
         children: <CardSettingsSection>[
           CardSettingsSection(
               header: CardSettingsHeader(
-                label: 'Camera Observer',
+                label: 'CameraObserver'.tr,
               ),
               children: <CardSettingsWidget>[
                 CardSettingsSwitch(
                   key: const Key('enableCamera'),
-                  label: 'Camera',
+                  label: 'Camera'.tr,
                   initialValue: DB.setting.enableCamera,
                   onChanged: (value) {
                     Log.log.fine('changing enableCamera: $value');
@@ -97,8 +99,19 @@ class _SettingWidgetState extends State<SettingWidget> {
                   },
                 ),
                 CardSettingsSwitch(
+                  key: const Key('enablePoseReminder'),
+                  label: 'PoseReminder'.tr,
+                  initialValue: DB.setting.enablePoseReminder,
+                  onChanged: (value) {
+                    Log.log.fine('changing enableCameraReply: $value');
+                    DB.setting.changeSetting(
+                        SettingKeyConstants.enablePoseReminder,
+                        value ? 'true' : 'false');
+                  },
+                ),
+                CardSettingsSwitch(
                   key: const Key('enableAIReplyFromCamera'),
-                  label: 'Pose AI Reply',
+                  label: 'PoseAIReply'.tr,
                   initialValue: DB.setting.enableAIReplyFromCamera,
                   visible: _cameraEnabled,
                   onChanged: (value) {
@@ -108,26 +121,15 @@ class _SettingWidgetState extends State<SettingWidget> {
                         value ? 'true' : 'false');
                   },
                 ),
-                CardSettingsSwitch(
-                  key: const Key('enablePoseReminder'),
-                  label: 'Pose Reminder',
-                  initialValue: DB.setting.enablePoseReminder,
-                  onChanged: (value) {
-                    Log.log.fine('changing enableCameraReply: $value');
-                    DB.setting.changeSetting(
-                        SettingKeyConstants.enablePoseReminder,
-                        value ? 'true' : 'false');
-                  },
-                ),
               ]),
           CardSettingsSection(
               header: CardSettingsHeader(
-                label: 'Voice Reply',
+                label: 'VoiceReply'.tr,
               ),
               children: <CardSettingsWidget>[
                 CardSettingsSwitch(
                   key: const Key('autoPlayVoice'),
-                  label: 'Auto Play',
+                  label: 'AutoPlay'.tr,
                   initialValue: DB.setting.autoPlayVoice,
                   onChanged: (value) {
                     Log.log.fine('changing auto play: $value');
@@ -136,13 +138,49 @@ class _SettingWidgetState extends State<SettingWidget> {
                   },
                 ),
                 CardSettingsSwitch(
-                  key: const Key('tabPlaySpeech'),
-                  label: 'Tab to Play',
+                  key: const Key('tapPlaySpeech'),
+                  label: 'TaptoPlay'.tr,
                   initialValue: DB.setting.tapPlayVoice,
                   onChanged: (value) {
                     Log.log.fine('changing tap play: $value');
                     DB.setting.changeSetting(SettingKeyConstants.tapPlayVoice,
                         value ? 'true' : 'false');
+                  },
+                ),
+              ]),
+          // set user nickname and description
+          CardSettingsSection(
+              header: CardSettingsHeader(
+                label: 'UserProfile'.tr,
+              ),
+              children: <CardSettingsWidget>[
+                CardSettingsText(
+                  key: const Key('userNickname'),
+                  label: 'UserNickname'.tr,
+                  maxLength: 256,
+                  initialValue: DB.setting.userNickname,
+                  validator: (newNickname) {
+                    if (newNickname == null || newNickname.isEmpty) {
+                      return 'Must be a valid nickname.';
+                    } else {
+                      return null;
+                    }
+                  },
+                  onChanged: (value) {
+                    Log.log.fine('changing nickname: $value');
+                    DB.setting
+                        .changeSetting(SettingKeyConstants.userNickname, value);
+                  },
+                ),
+                CardSettingsParagraph(
+                  key: const Key('userDescription'),
+                  label: 'UserDescription'.tr,
+                  maxLength: 256,
+                  initialValue: DB.setting.userDescription,
+                  onChanged: (value) {
+                    Log.log.fine('changing user description: $value');
+                    DB.setting.changeSetting(
+                        SettingKeyConstants.userDescription, value);
                   },
                 ),
               ]),

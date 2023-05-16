@@ -18,14 +18,25 @@ class AgentPromts {
     progressKeyNeedSearch: 'Search key words',
     progressKeyTipsToUser: 'Tips for user(only when you are sure)'
   };
-  static String gptPromptPrefix = '''
+  static String gptPromptPrefixInit = '''
 I hope you play the role of an intelligent decision assistant, helping users achieve their goals. 
 Each time you will receive a JSON input, analyze the goal and current situation, provide appropriate suggestions, and output the conclusions in the required JSON format. 
 ''';
+  static String gptPromptPrefixJson = gptPromptPrefixInit;
+  static String gptPromptPrefix = '';
+  static changeGptPromptPrefix(String userNickName, String userDescription) {
+    if (userNickName.isNotEmpty && userDescription.isNotEmpty) {
+      gptPromptPrefix =
+          'You are talking to $userDescription, you can call him/her $userNickName.';
+      gptPromptPrefixJson = '''$gptPromptPrefix
+ $gptPromptPrefixInit''';
+    }
+  }
+
   static String askForJson =
       'Please refer to the requested json format, only the json content is returned';
   static Map<ActionType, String> agentPrompts = {
-    ActionType.askGptForCreateTask: """$gptPromptPrefix
+    ActionType.askGptForCreateTask: """$gptPromptPrefixJson
 ---Input---
 This time, you will obtain the task goal and description from the input JSON: goal, goalDescription, 
 and user-inputted tasks as primary reference: userInput,
@@ -35,7 +46,7 @@ as well as the experience summarized from historical tasks for the same goal: ex
 Output is the list of tasks you analyzed, including task description(if userInput is Chinese, please reply in Chinese; Otherwise, please use English) and estimated time (in minutes),
  sorted by importance from front to back, and outputted in the required JSON format.
 """,
-    ActionType.askGptForNewExperience: """$gptPromptPrefix
+    ActionType.askGptForNewExperience: """$gptPromptPrefixJson
 ---Input---
 This time, you will obtain the global state from the input JSON: goalState, having these fields:
   goalName,
@@ -55,7 +66,7 @@ The experiences used to generate these tasks for this goal: experiencesUsed.
 Based on the above information, you need to analyze the validity of the experience used this time, and fine-tune the experience for better results when creating subsequent tasks for the same goal.
 The output experience should be in the required json format.
 """,
-    ActionType.askGptForTaskProgressEvaluation: """$gptPromptPrefix
+    ActionType.askGptForTaskProgressEvaluation: """$gptPromptPrefixJson
 ---Input---
 This time, you will obtain these fields from input JSON:
   goalName,

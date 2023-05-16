@@ -22,13 +22,13 @@ class CameraView extends StatefulWidget {
   final CameraLensDirection initialDirection;
 
   @override
-  State<CameraView> createState() => _CameraViewState();
+  State<CameraView> createState() => CameraViewState();
   static late double ratio;
   static late Size inputImageSize;
   static const int detectInterval = 1000; // ms
 }
 
-class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
+class CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   late List<CameraDescription> _cameras;
   late int _cameraIndex = -1;
   CameraController? _cameraController;
@@ -53,6 +53,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   static bool _predicting = false;
   static bool _cameraInited = false;
   static bool _cameraIniting = false;
+  static InputImageRotation currentRotation = InputImageRotation.rotation0deg;
   bool _viewDisposed = false;
   int _processCount = 0;
   int _frameCount = 0;
@@ -191,13 +192,22 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         Size(image.width.toDouble(), image.height.toDouble());
 
     final camera = _cameras[_cameraIndex];
-    final imageRotation =
-        InputImageRotationValue.fromRawValue(camera.sensorOrientation);
-    if (imageRotation == null) return null;
+    InputImageRotation? imageRotation;
 
     final inputImageFormat =
         InputImageFormatValue.fromRawValue(image.format.raw);
     if (inputImageFormat == null) return null;
+
+    Orientation currentOrientation = MediaQuery.of(context).orientation;
+    if (currentOrientation == Orientation.landscape) {
+      imageRotation =
+          InputImageRotationValue.fromRawValue(camera.sensorOrientation - 270);
+    } else {
+      imageRotation =
+          InputImageRotationValue.fromRawValue(camera.sensorOrientation);
+    }
+    if (imageRotation == null) return null;
+    currentRotation = imageRotation;
 
     final planeData = image.planes.map(
       (Plane plane) {

@@ -45,6 +45,7 @@ class _SettingWidgetState extends State<SettingWidget> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _customUrlVisible = false;
   bool _cameraEnabled = false;
+  bool _aiReplyEnabled = false;
   String _proxyUrl = '';
 
   @override
@@ -57,6 +58,9 @@ class _SettingWidgetState extends State<SettingWidget> {
     }
     if (DB.setting.enableCamera) {
       _cameraEnabled = true;
+    }
+    if (DB.setting.enableAIReplyFromCamera) {
+      _aiReplyEnabled = true;
     }
     String userAndKey = '${DB.seeProxy.user}-';
     userAndKey +=
@@ -88,13 +92,19 @@ class _SettingWidgetState extends State<SettingWidget> {
                         _cameraEnabled = false;
                       });
 
-                      // save setting
+                      // save related settings
+                      DB.setting.changeSetting(
+                          SettingKeyConstants.enablePoseReminder, 'false');
                       DB.setting.changeSetting(
                           SettingKeyConstants.enableAIReplyFromCamera, 'false');
                     } else {
                       setState(() {
                         _cameraEnabled = true;
                       });
+                      DB.setting.changeSetting(
+                          SettingKeyConstants.enablePoseReminder, 'true');
+                      DB.setting.changeSetting(
+                          SettingKeyConstants.enableAIReplyFromCamera, 'true');
                     }
                   },
                 ),
@@ -102,11 +112,25 @@ class _SettingWidgetState extends State<SettingWidget> {
                   key: const Key('enablePoseReminder'),
                   label: 'PoseReminder'.tr,
                   initialValue: DB.setting.enablePoseReminder,
+                  visible: _cameraEnabled,
                   onChanged: (value) {
                     Log.log.fine('changing enableCameraReply: $value');
                     DB.setting.changeSetting(
                         SettingKeyConstants.enablePoseReminder,
                         value ? 'true' : 'false');
+                    if (!value) {
+                      setState(() {
+                        _aiReplyEnabled = false;
+                      });
+                      DB.setting.changeSetting(
+                          SettingKeyConstants.enableAIReplyFromCamera, 'false');
+                    } else {
+                      setState(() {
+                        _aiReplyEnabled = true;
+                      });
+                      DB.setting.changeSetting(
+                          SettingKeyConstants.enableAIReplyFromCamera, 'true');
+                    }
                   },
                 ),
                 CardSettingsSwitch(
@@ -114,6 +138,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                   label: 'PoseAIReply'.tr,
                   initialValue: DB.setting.enableAIReplyFromCamera,
                   visible: _cameraEnabled,
+                  enabled: _aiReplyEnabled,
                   onChanged: (value) {
                     Log.log.fine('changing enableAIReplyFromCamera: $value');
                     DB.setting.changeSetting(

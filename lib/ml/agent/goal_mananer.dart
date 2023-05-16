@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -40,9 +39,7 @@ class GoalManager extends GetxController {
       if (running) {
         return;
       }
-      if (homeCon.topicId >= 0 ||
-          homeCon.inSubWindow ||
-          Get.currentRoute != '/home') {
+      if (homeCon.isInSubWindowOrSubPage()) {
         return;
       }
       Log.log.fine(
@@ -174,6 +171,11 @@ class GoalManager extends GetxController {
       return [];
     }
     List<TaskInfo> newTasks = await askGptForTasks(goal, userInput);
+    if (newTasks.isEmpty) {
+      agentData.updateGoal(goalId);
+      return [];
+    }
+
     GoalInfo tempGoal = GoalInfo()
       ..goalId = goal.id
       ..name = goal.name
@@ -188,9 +190,16 @@ class GoalManager extends GetxController {
     return await askUserCommon(goal, showText);
   }
 
-  Future<String> askUserCommon(SeeGoal goal, String inputText,
-      {int taskId = 0}) async {
+  Future<String> askUserCommon(
+    SeeGoal goal,
+    String inputText, {
+    int taskId = 0,
+    bool showAvatar = false,
+  }) async {
     MyAction action = MyAction(goal.id, 0, ActionType.askUserCommon, inputText);
+    if (showAvatar) {
+      Me.defaultSpeaker.talk(inputText);
+    }
     homeCon.setInSubWindow(true);
     await action.excute();
     homeCon.setInSubWindow(false);
@@ -216,20 +225,16 @@ class GoalManager extends GetxController {
       'lastTasks': lastTaskNames,
       'userInput': userInput,
       'constraints': '''
-You should only respond in JSON format as described below:
-an array containing 1-3 elements with description: string, the description of the task,
-estimatedTimeInMinutes: number, the estimated time to live in minutes. Use 0 instead of null if you don't know.
+Returns a set of tasks that can be executed step by step, with the following structure:
+an array containing 1-3 elements with description: string, the description of the task, 
+estimatedTimeInMinutes: the estimated time to live in minutes. Use 0 instead of null if you don't know, only one number is allowed.
 Based on the userInput task description, you can divide the main task into 2-3 sub-tasks or add 1-2 additional sub-tasks based on past experience.
 {
   "tasks":
 [
   {
   "description": "string",
-  "estimatedTimeInMinutes": "number"
-  },
-  {
-  "description": "string",
-  "estimatedTimeInMinutes": "number"
+  "estimatedTimeInMinutes": "integer"
   }
 ]
 }
@@ -470,19 +475,18 @@ Every experience should be short, less than 100 words, please refer to the reque
     return 0;
   }
 
-  List<List<String>> generateProgressEvaluationReactions(
+  String generateProgressEvaluationReactions(
       int questionCount, double timeRatio) {
     // sample progressEvaluationMap keys and values according to current questions and times
-    List<String> keys = AgentPromts.progressEvaluationMap.keys.toList();
-    List<String> values = [];
+    List<String> keys =
+        AgentPromts.progressEvaluationOutputFormatMap.keys.toList();
+    String values = '';
     Map<String, String> addtionMap = {};
     for (int i = 0; i < keys.length; i++) {
       addtionMap[keys[i]] = '';
     }
-    const String notRecommendKey = '(Not recommended)';
-    const String recommendKey = '(recommended)';
-    // remove quiz
-    keys.remove(AgentPromts.progressKeyQuiz);
+    const String notRecommendKey = ' (Not recommended)';
+    const String recommendKey = ' (recommended)';
     if (questionCount < 1) {
       addtionMap[AgentPromts.progressKeyNeedSearch] = notRecommendKey;
     } else {
@@ -491,10 +495,13 @@ Every experience should be short, less than 100 words, please refer to the reque
       }
     }
     for (int i = 0; i < keys.length; i++) {
-      values.add(AgentPromts.progressEvaluationMap[keys[i]]! +
-          (addtionMap[keys[i]] ?? ''));
+      if (values.isNotEmpty) {
+        values += ',';
+      }
+      values += AgentPromts.progressEvaluationOutputFormatMap[keys[i]]! +
+          (addtionMap[keys[i]] ?? '');
     }
-    return [keys, values];
+    return values;
   }
 
   Future<bool> askGptForTaskProgressEvaluation(
@@ -512,18 +519,14 @@ Every experience should be short, less than 100 words, please refer to the reque
     String sysPromts =
         AgentPromts.agentPrompts[ActionType.askGptForTaskProgressEvaluation]!;
     List<String> experiencesUsed = await agentData.getExperience(goal.id);
-    List<List<String>> reactions = generateProgressEvaluationReactions(
+    String reactions = generateProgressEvaluationReactions(
         questions.length + conversations.length,
         agentData.getTimeSpentRatio(task));
-    if (reactions[0].isEmpty) {
+    if (reactions.isEmpty) {
       Log.log.info(
           'askGptForTaskProgressEvaluation reactions is empty, goal: ${goal.name}, task: ${task.description}');
       return false;
     }
-    String keysStr = jsonEncode(reactions[0]);
-    String outputJsonFormat =
-        '{"type": "string", "text|(quesion, answer)": "string"}';
-    String valuesStr = jsonEncode(reactions[1]);
     // ask gpt for new experience
     Map<String, dynamic> inputMap = {
       'goalName': goalState.goalName,
@@ -540,26 +543,15 @@ Every experience should be short, less than 100 words, please refer to the reque
       'constraints':
           '''You should only respond in JSON format as described below:
 type is string as action type,
-text should be a string, if taskDiscription is Chinese, please reply in Chinese; Otherwise, please use English.
-{
-  "type": "$keysStr",
-  "text": "$valuesStr"
-}
-or
-{
-  "type": "quiz",
-  "question": "...",
-  "answer": "..."
-}
-
-Responses should be short, less than 100 words, please refer to the requested json format, only the json content is returned.
+if taskDiscription is Chinese, please reply other text in Chinese; Otherwise, please use English.
+Output format:
+$reactions
+Responses should be short, less than 100 words. Please refer to the requested json format, only the json content is returned.
 ''',
     };
     MyAction action = MyAction(
         goal.id, task.id, ActionType.askGptForTaskProgressEvaluation, '',
-        inMap: inputMap,
-        sysPrompt: sysPromts,
-        outputJsonFormat: outputJsonFormat);
+        inMap: inputMap, sysPrompt: sysPromts, outputJsonFormat: reactions);
     await action.excute();
     Log.log
         .fine('askGptForTaskProgressEvaluation output: ${action.act?.output}');
@@ -576,7 +568,8 @@ Responses should be short, less than 100 words, please refer to the requested js
         gptReplyText = action.outputMap?['text'] ?? '';
         switch (action.outputMap?['type']) {
           case AgentPromts.progressKeyNeedMoreInfo:
-            nextInput = await askUserCommon(goal, gptReplyText);
+            nextInput =
+                await askUserCommon(goal, gptReplyText, showAvatar: true);
             if (nextInput.isEmpty) {
               Log.log.warning(
                   'try time $i, askGptForTaskProgressEvaluation userFeedback is empty');
@@ -629,7 +622,7 @@ Responses should be short, less than 100 words, please refer to the requested js
         nextInput = '''$nextInput
 ---
 Remember to reply in JSON format as described below:
-$outputJsonFormat
+$reactions
 ''';
         action = MyAction(goal.id, task.id,
             ActionType.askGptForTaskProgressEvaluation, nextInput,

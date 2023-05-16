@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:see_me_now/ui/camera_view.dart';
 
 import 'coordinates_translator.dart';
 
@@ -12,10 +13,11 @@ class FaceDetectorPainter extends CustomPainter {
 
   final List<Face> faces;
   final Size absoluteImageSize;
-  final InputImageRotation rotation;
+  InputImageRotation rotation;
 
   @override
   void paint(Canvas canvas, Size size) {
+    rotation = CameraViewState.currentRotation;
     final Paint paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0

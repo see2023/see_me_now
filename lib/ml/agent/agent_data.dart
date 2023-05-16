@@ -405,7 +405,9 @@ class AgentData {
                   .valueProperty()
                   .average() ??
               0;
-          goalStateIndex.valueBefore = v;
+          if (!v.isNaN) {
+            goalStateIndex.valueBefore = v;
+          }
           // get average value of tasks of this statePattern
           double stateValue = 0.0;
           int stateCount = 0;
@@ -430,7 +432,7 @@ class AgentData {
               stateCount++;
             }
           }
-          if (stateCount > 0) {
+          if (stateCount > 0 && !stateValue.isNaN) {
             goalStateIndex.valueNow = stateValue / stateCount;
           }
           goalState.envStates.add(goalStateIndex);

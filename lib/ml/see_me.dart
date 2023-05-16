@@ -183,7 +183,8 @@ The response content should be short and easy to understand and should not excee
       String promptText = '''
 In the last $minutes minutes, I have been sitting improperly for ${notifyAskewTimes.length} times, please give a suitable prompt to make me do better.
 You can give a stern reminder, or you can use the aggressive method. 
-Please reply in the same language as his name, note that the content should be simple and clear, no more than 30 words.
+Please reply in the same language as his name, no translation is required.
+Note that the content should be simple and clear, no more than 30 words.
 ''';
       notifyAskewTimes.clear();
       ChatGPTRes res = await DB.chatGPTProxy.sendMessage(
@@ -206,7 +207,7 @@ Please reply in the same language as his name, note that the content should be s
       await talk(notifyAskewMessage,
           messageId: notifyAskewMessageId, showTextInHome: true);
     }
-    notifyAskewTimes.add(DateTime.now());
+    notifyAskewTimes.add(now);
     notifying = false;
   }
 }

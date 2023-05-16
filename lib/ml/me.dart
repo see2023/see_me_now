@@ -1,5 +1,6 @@
 import 'package:event/event.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
@@ -10,6 +11,7 @@ import 'package:see_me_now/main.dart';
 import 'package:see_me_now/ml/see_me.dart';
 import 'package:see_me_now/tools/voice_assistant.dart';
 import 'package:see_me_now/ui/camera_view.dart';
+import 'package:see_me_now/ui/home_page.dart';
 
 enum CameraDataType {
   face,
@@ -153,7 +155,11 @@ class Me {
         MyApp.latestStat.nobodyCount = 0;
         MyApp.latestStat.uprightCount = 0;
         int times = MyApp.latestStat.askewCount ~/ statusChangeCount;
-        if (times == 1 || times % 10 == 0) {
+        if (times % 30 == 0) {
+          final HomeController homeCon = Get.put(HomeController());
+          if (homeCon.isInSubWindowOrSubPage()) {
+            return;
+          }
           if (DB.setting.enablePoseReminder) {
             if (DB.setting.enableAIReplyFromCamera) {
               defaultSpeaker.notifyAskew();

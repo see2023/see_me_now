@@ -1,3 +1,5 @@
+import 'package:see_me_now/data/log.dart';
+
 String extractJsonPart(String input) {
   // extract json part from input, remove content before fisrt { and after last }
   if (input.isEmpty) {
@@ -22,4 +24,24 @@ bool compareList(List<String> list1, List<String> list2) {
     }
   }
   return true;
+}
+
+int extractInt(String input) {
+  // find first number string by regex, return int value
+  try {
+    if (input.isEmpty) {
+      return 0;
+    }
+    RegExp reg = RegExp(r'\d+');
+    Iterable<Match> matches = reg.allMatches(input);
+    if (matches.isEmpty) {
+      return 0;
+    }
+    Match m = matches.first;
+    String? matchStr = m.group(0);
+    return int.parse(matchStr ?? '0');
+  } catch (e) {
+    Log.log.warning('extractInt: $e');
+    return 0;
+  }
 }

@@ -292,7 +292,14 @@ class _GoalWidgetState extends State<GoalWidget> {
                                     }
                                     Get.back();
                                   },
-                                  icon: const Icon(Icons.add))
+                                  icon: const Icon(Icons.add)),
+                              // button to modify goal
+                              IconButton(
+                                onPressed: () async {
+                                  Get.back(result: goal.id);
+                                },
+                                icon: const Icon(Icons.edit),
+                              ),
                             ],
                           );
                         }
@@ -405,6 +412,294 @@ class _GoalWidgetState extends State<GoalWidget> {
                   );
                 },
               ),
+            ),
+          ),
+          Positioned(
+            top: 50,
+            left: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              color: Colors.white70,
+              iconSize: 36,
+              onPressed: () {
+                Get.back();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// show and modify goal's experience
+class GoalExperienceWidget extends StatefulWidget {
+  final SeeGoal goal;
+  final SeeGoalExperiences? experiences;
+  final Function(SeeGoal, int, List<String>)? updateGoalAndExperiences;
+  final Function(int) deleteExperience;
+  final int experienceId;
+  const GoalExperienceWidget(
+      {Key? key,
+      required this.goal,
+      required this.experiences,
+      required this.updateGoalAndExperiences,
+      required this.experienceId,
+      required this.deleteExperience})
+      : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _GoalExperienceWidgetState();
+}
+
+class _GoalExperienceWidgetState extends State<GoalExperienceWidget> {
+  SeeGoal? goal;
+  SeeGoal tmpGoal = SeeGoal();
+  List<String> experienceList = [];
+  @override
+  void initState() {
+    super.initState();
+    goal = widget.goal;
+    // copy goal to tmpGoal
+    tmpGoal.name = goal?.name ?? '';
+    tmpGoal.description = goal?.description ?? '';
+    tmpGoal.priority = goal?.priority ?? 0;
+    if (widget.experiences != null) {
+      for (int i = 0; i < widget.experiences!.experiences.length; i++) {
+        experienceList.add(widget.experiences!.experiences[i]);
+      }
+    }
+  }
+
+// show goal's name, discrption,priority[1-10], GoalType, experience, and two buttons to modify/cancel them.
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: Stack(
+        children: [
+          Opacity(
+            opacity: 0.75,
+            child: Container(
+              padding:
+                  const EdgeInsets.only(top: 90, left: 5, right: 5, bottom: 20),
+              //show goal name, discrption,priority[1-10], GoalType, experience, and two buttons to modify/cancel them.
+              child: Column(
+                  // space size between widgets
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            'GoalName'.tr,
+                            textAlign: TextAlign.left,
+                            softWrap: true,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: TextField(
+                            textAlign: TextAlign.left,
+                            controller:
+                                TextEditingController(text: goal?.name ?? ''),
+                            onChanged: (String value) {
+                              tmpGoal.name = value;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            'GoalDescription'.tr,
+                            textAlign: TextAlign.left,
+                            softWrap: true,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: TextField(
+                            maxLines: null,
+                            textAlign: TextAlign.left,
+                            controller: TextEditingController(
+                                text: goal?.description ?? ''),
+                            onChanged: (String value) {
+                              tmpGoal.description = value;
+                            },
+                          ),
+                        )
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            'GoalPriority'.tr,
+                            textAlign: TextAlign.left,
+                            softWrap: true,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: TextField(
+                            textAlign: TextAlign.left,
+                            controller: TextEditingController(
+                                text: goal?.priority.toString() ?? ''),
+                            onChanged: (String value) {
+                              try {
+                                tmpGoal.priority = int.parse(value);
+                              } catch (e) {
+                                Log.log.fine('parse priority error: $e');
+                              }
+                            },
+                          ),
+                        )
+                      ],
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.blueGrey),
+                      ),
+                      child: Row(children: [
+                        Expanded(
+                          flex: 5,
+                          child: Text(
+                            'GoalExperience'.tr,
+                            textAlign: TextAlign.left,
+                            softWrap: true,
+                          ),
+                        ),
+                        // delete button
+                        Expanded(
+                          flex: 1,
+                          child: IconButton(
+                            onPressed: () {
+                              // delete experience
+                              widget.deleteExperience(widget.experienceId);
+                              Get.back();
+                            },
+                            icon: const Icon(Icons.delete),
+                          ),
+                        ),
+                      ]),
+                    ),
+                    experienceList.isNotEmpty
+                        ? Expanded(
+                            flex: 1,
+                            // 按行显示experienceList， 每一行都可以编辑； 可以添加新行，删除某一行
+                            child: ListView.builder(
+                              itemCount: experienceList.length + 1,
+                              itemBuilder: (BuildContext context, int index) {
+                                if (index == experienceList.length) {
+                                  return Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: IconButton(
+                                          onPressed: () {
+                                            // add experience
+                                            setState(() {
+                                              experienceList.add('');
+                                            });
+                                          },
+                                          icon: const Icon(Icons.add),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.blueGrey,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 5,
+                                        child: TextField(
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          // 自动换行
+                                          maxLines: null,
+                                          textAlign: TextAlign.left,
+                                          controller: TextEditingController(
+                                              text: experienceList[index]),
+                                          onChanged: (String value) {
+                                            experienceList[index] = value;
+                                          },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: IconButton(
+                                          onPressed: () {
+                                            // delete experience
+                                            setState(() {
+                                              experienceList.removeAt(index);
+                                            });
+                                          },
+                                          icon: const Icon(Icons.delete),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : Expanded(
+                            flex: 1,
+                            child: Text(
+                              'NoExperience'.tr,
+                              textAlign: TextAlign.left,
+                              softWrap: true,
+                            ),
+                          ),
+                    // ok cancel button
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: IconButton(
+                            onPressed: () async {
+                              // modify goal
+                              Log.log
+                                  .fine('saving goal and experience $tmpGoal');
+                              if (goal == null ||
+                                  widget.updateGoalAndExperiences == null) {
+                                return;
+                              }
+                              goal!.name = tmpGoal.name.trim();
+                              goal!.description = tmpGoal.description.trim();
+                              goal!.priority = tmpGoal.priority;
+                              await widget.updateGoalAndExperiences!(
+                                  goal!, widget.experienceId, experienceList);
+                              Get.back();
+                            },
+                            icon: const Icon(Icons.done),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: IconButton(
+                            onPressed: () {
+                              Get.back();
+                            },
+                            icon: const Icon(Icons.cancel_outlined),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ]),
             ),
           ),
           Positioned(

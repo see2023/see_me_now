@@ -83,8 +83,7 @@ class GoalManager extends GetxController {
   }
 
   showGoalsAndTasks() async {
-    // Get.dialog(
-    await showDialog(
+    int? goalId = await showDialog(
       barrierColor: Colors.transparent,
       context: Get.context!,
       builder: (_) => GoalWidget(
@@ -95,6 +94,44 @@ class GoalManager extends GetxController {
         onAddNewTask: onAddNewTask,
       ),
     );
+
+    if (goalId != null && goalId > 0) {
+      SeeGoal? goal = agentData.goalsMap[goalId];
+      if (goal != null) {
+        SeeGoalExperiences? experiences = await DB.isar!.seeGoalExperiences
+            .where()
+            .goalIdEqualTo(goalId)
+            .sortByInsertTimeDesc()
+            .findFirst();
+        await showDialog(
+          barrierColor: Colors.transparent,
+          context: Get.context!,
+          builder: (_) => GoalExperienceWidget(
+            goal: goal,
+            experiences: experiences,
+            experienceId: experiences?.id ?? 0,
+            updateGoalAndExperiences: updateGoalAndExperiences,
+            deleteExperience: deleteExperience,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<bool> updateGoalAndExperiences(
+      SeeGoal goal, int experienceId, List<String> experiences) async {
+    await agentData.updateGoal(goal.id,
+        name: goal.name,
+        description: goal.description,
+        priority: goal.priority);
+    if (experienceId > 0) {
+      await agentData.updateExperience(experienceId, experiences);
+    }
+    return true;
+  }
+
+  Future<bool> deleteExperience(int experienceId) async {
+    return await agentData.deleteExperience(experienceId);
   }
 
   Future<int> checkGoals() async {
@@ -187,7 +224,7 @@ class GoalManager extends GetxController {
 
   Future<String> askUserForTasks(SeeGoal goal) async {
     String showText = 'askUserForTasks'.trParams({'name': goal.name});
-    return await askUserCommon(goal, showText);
+    return await askUserCommon(goal, showText, showAvatar: true);
   }
 
   Future<String> askUserCommon(
@@ -229,6 +266,9 @@ Returns a set of tasks that can be executed step by step, with the following str
 an array containing 1-3 elements with description: string, the description of the task, 
 estimatedTimeInMinutes: the estimated time to live in minutes. Use 0 instead of null if you don't know, only one number is allowed.
 Based on the userInput task description, you can divide the main task into 2-3 sub-tasks or add 1-2 additional sub-tasks based on past experience.
+Note that this refers to specific tasks, not experiences. Important! Please reply in Json!!
+''',
+      'outputJsonFormat': '''
 {
   "tasks":
 [
@@ -238,8 +278,6 @@ Based on the userInput task description, you can divide the main task into 2-3 s
   }
 ]
 }
-Note that this refers to specific tasks, not experiences.
-Please return tasks in strict accordance with the above json format.
 ''',
     };
     String sysPromts =
@@ -367,14 +405,15 @@ Please return tasks in strict accordance with the above json format.
       'goalState': goalState.toString(),
       'experienceUsed': experiencesUsed,
       'constraints': '''
-You should only respond in JSON format as described below:
-an array A similar experience after optimization:
+Please reply an array containing similar experience after optimization;
+Every experience should be short, less than 100 words;
+Respond in JSON format as described below, Important! Please reply in Json!!''',
+      'outputJsonFormat': '''
 {
   "experiences":[
     "experience 1", "experience 2", "experience 3"
   ]
 }
-Every experience should be short, less than 100 words, please refer to the requested json format, only the json content is returned.
 ''',
     };
     MyAction action = MyAction(
@@ -540,13 +579,10 @@ Every experience should be short, less than 100 words, please refer to the reque
       'minorConversations': questions,
       'experienceUsed': experiencesUsed,
       'envStates': goalState.envStates.map((e) => e.toString()).toList(),
+      'outputJsonFormat': reactions,
       'constraints':
-          '''You should only respond in JSON format as described below:
-type is string as action type,
-if taskDiscription is Chinese, please reply other text in Chinese; Otherwise, please use English.
-Output format:
-$reactions
-Responses should be short, less than 100 words. Please refer to the requested json format, only the json content is returned.
+          '''if goalName is Chinese, please reply in Chinese; Otherwise, please use English.
+The answer should be brief and output like outputJsonFormat. Important! Please reply in Json!!
 ''',
     };
     MyAction action = MyAction(
@@ -619,10 +655,8 @@ Responses should be short, less than 100 words. Please refer to the requested js
         if (replyOk) {
           break;
         }
-        nextInput = '''$nextInput
----
-Remember to reply in JSON format as described below:
-$reactions
+        nextInput = '''{"reply":"$nextInput", "outputJsonFormat":
+$reactions }
 ''';
         action = MyAction(goal.id, task.id,
             ActionType.askGptForTaskProgressEvaluation, nextInput,

@@ -189,11 +189,27 @@ class AgentData {
   }
 
   // update goal's update time and tasks by addTask
-  updateGoal(int goalId) {
+  updateGoal(int goalId,
+      {String name = '',
+      String description = '',
+      int priority = 0,
+      GoalType? goalType}) {
     SeeGoal? goal = goalsMap[goalId];
     if (goal == null) {
-      Log.log.warning('addTask: goal not found $goalId');
+      Log.log.warning('updateGoal, id not found: $goalId');
       return;
+    }
+    if (name != '') {
+      goal.name = name;
+    }
+    if (description != '') {
+      goal.description = description;
+    }
+    if (priority > 0) {
+      goal.priority = priority;
+    }
+    if (goalType != null) {
+      goal.type = goalType;
     }
     DB.isar?.writeTxn(() async {
       goal.updateTime = DateTime.now();
@@ -328,6 +344,34 @@ class AgentData {
       Log.log.fine('saveExperience: newId $newId');
     });
     return true;
+  }
+
+  Future<bool> updateExperience(int experienceId, List<String> experiences,
+      {int score = -1}) async {
+    SeeGoalExperiences? experience = DB.isar?.seeGoalExperiences
+        .where()
+        .idEqualTo(experienceId)
+        .findFirstSync();
+    if (experience != null) {
+      if (score > 0) {
+        experience.score = score;
+      }
+      experience.experiences = experiences;
+      await DB.isar?.writeTxn(() async {
+        await DB.isar?.seeGoalExperiences.put(experience);
+        Log.log.fine('updateExperience: lastExperience updated');
+      });
+    }
+    return true;
+  }
+
+  Future<bool> deleteExperience(int experienceId) async {
+    bool? rt;
+    await DB.isar?.writeTxn(() async {
+      rt = await DB.isar?.seeGoalExperiences.delete(experienceId);
+      Log.log.fine('deleteExperience id($experienceId) deleted');
+    });
+    return rt ?? false;
   }
 
   Future<List<String>> getTasksOfLastDay(int goalId) async {

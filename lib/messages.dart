@@ -22,6 +22,10 @@ class Messages extends Translations {
           'VoiceReply': 'Voice Reply',
           'AutoPlay': 'Auto Play',
           'TaptoPlay': 'Tap to Play',
+          'GoalName': 'Goal',
+          'GoalDescription': 'Description',
+          'GoalPriority': 'priority',
+          'GoalExperience': 'Experience',
         },
         'zh_CN': {
           'askUserForTasks': '你今天有什么 @name 的计划吗?',
@@ -42,6 +46,10 @@ class Messages extends Translations {
           'VoiceReply': '语音回复',
           'AutoPlay': '自动播放',
           'TaptoPlay': '点击播放',
+          'GoalName': '目标',
+          'GoalDescription': '描述',
+          'GoalPriority': '优先级',
+          'GoalExperience': '经验',
         },
       };
 }

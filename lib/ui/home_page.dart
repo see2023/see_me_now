@@ -9,7 +9,10 @@ import 'package:see_me_now/ui/chat_widget.dart';
 
 class HomeController extends GetxController {
   bool isInSubWindowOrSubPage() {
-    return inSubWindow || topicId >= 0 || Get.currentRoute != '/home';
+    return MyApp.appPaused ||
+        inSubWindow ||
+        topicId >= 0 ||
+        Get.currentRoute != '/home';
   }
 
   bool inSubWindow = false;

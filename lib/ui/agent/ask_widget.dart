@@ -43,6 +43,7 @@ class _AskWidgetState extends State<AskWidget> {
             children: [
               Text(widget.tips),
               TextField(
+                maxLines: null,
                 controller: _controller,
                 onSubmitted: (value) {
                   widget.onSubmitted?.call(value);
@@ -53,6 +54,7 @@ class _AskWidgetState extends State<AskWidget> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
+                    iconSize: 36,
                     onPressed: () {
                       widget.onSubmitted?.call(_controller.text);
                       Get.back();
@@ -60,6 +62,7 @@ class _AskWidgetState extends State<AskWidget> {
                     icon: const Icon(Icons.check),
                   ),
                   IconButton(
+                    iconSize: 36,
                     onPressed: () {
                       widget.onSubmitted?.call('');
                       Get.back();

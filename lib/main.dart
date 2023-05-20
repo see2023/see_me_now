@@ -28,6 +28,7 @@ class MyApp extends StatefulWidget {
   static final homePageStateKey = GlobalKey<HomePageState>();
   static final homePage = HomePage(key: homePageStateKey);
   static final goalManager = GoalManager();
+  static bool appPaused = false;
 
   static void refreshHome() {
     homePageStateKey.currentState?.refresh();
@@ -41,13 +42,31 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 3000), () {
       MyApp.goalManager.initLoop();
     });
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // changing appPaused to true when app is in background
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    Log.log.fine('In _MyAppState didChangeAppLifecycleState, state: $state');
+    if (state == AppLifecycleState.paused) {
+      MyApp.appPaused = true;
+    } else if (state == AppLifecycleState.resumed) {
+      MyApp.appPaused = false;
+    }
   }
 
   @override

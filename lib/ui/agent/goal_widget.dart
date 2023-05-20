@@ -28,126 +28,141 @@ class _SimpleGoalWidgetState extends State<SimpleGoalWidget> {
       child: Opacity(
         opacity: 0.75,
         child: Container(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.fromLTRB(10, 70, 10, 10),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // show goal name
-              Text(widget.goal?.name ?? ''),
+              Expanded(flex: 1, child: Text(widget.goal?.name ?? '')),
 
               // show SimpleGoal's List of SimpleTask, first line is table header, last line to add new task
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: (widget.goal?.tasks?.length ?? 0) + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    // table header
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Task',
-                            textAlign: TextAlign.center,
-                            softWrap: true,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            'Time(min)',
-                            textAlign: TextAlign.center,
-                            softWrap: true,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            'X',
-                            textAlign: TextAlign.center,
-                            softWrap: true,
-                          ),
-                        ),
-                      ],
-                    );
-                  } else {
-                    // show SimpleTask
-                    return Container(
-                      padding: const EdgeInsets.all(10.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.grey,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
+              Expanded(
+                flex: 10,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: (widget.goal?.tasks?.length ?? 0) + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // table header
+                      return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                        children: const [
                           Expanded(
-                            flex: 3,
+                            flex: 5,
                             child: Text(
-                              widget.goal?.tasks?[index - 1].description ?? '',
-                              textAlign: TextAlign.left,
+                              'Task',
+                              textAlign: TextAlign.center,
+                              softWrap: true,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'Time(min)',
+                              textAlign: TextAlign.center,
                               softWrap: true,
                             ),
                           ),
                           Expanded(
                             flex: 1,
-                            child: TextField(
+                            child: Text(
+                              'X',
                               textAlign: TextAlign.center,
-                              controller: TextEditingController(
-                                  text: widget.goal?.tasks?[index - 1]
-                                          .estimatedTimeInMinutes
-                                          .toString() ??
-                                      ''),
-                              onChanged: (value) {
-                                setState(() {
-                                  widget.goal?.tasks?[index - 1]
-                                          .estimatedTimeInMinutes =
-                                      int.parse(value);
-                                });
-                              },
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: IconButton(
-                              alignment: Alignment.centerRight,
-                              onPressed: () {
-                                setState(() {
-                                  widget.goal?.tasks?.removeAt(index - 1);
-                                });
-                              },
-                              icon: const Icon(Icons.delete_outline),
+                              softWrap: true,
                             ),
                           ),
                         ],
-                      ),
-                    );
-                  }
-                },
+                      );
+                    } else {
+                      // show SimpleTask
+                      return Container(
+                        padding: const EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              flex: 5,
+                              child: TextField(
+                                maxLines: null,
+                                textAlign: TextAlign.left,
+                                controller: TextEditingController(
+                                    text: widget.goal?.tasks?[index - 1]
+                                            .description ??
+                                        ''),
+                                onChanged: (value) {
+                                  setState(() {
+                                    widget.goal?.tasks?[index - 1].description =
+                                        value;
+                                  });
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: TextField(
+                                textAlign: TextAlign.center,
+                                controller: TextEditingController(
+                                    text: widget.goal?.tasks?[index - 1]
+                                            .estimatedTimeInMinutes
+                                            .toString() ??
+                                        ''),
+                                onChanged: (value) {
+                                  setState(() {
+                                    widget.goal?.tasks?[index - 1]
+                                            .estimatedTimeInMinutes =
+                                        int.parse(value);
+                                  });
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: IconButton(
+                                alignment: Alignment.centerRight,
+                                onPressed: () {
+                                  setState(() {
+                                    widget.goal?.tasks?.removeAt(index - 1);
+                                  });
+                                },
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  },
+                ),
               ),
 
-              Row(
-                // OK and Cancel button
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      widget.onSubmitted?.call(true);
-                      Get.back();
-                    },
-                    icon: const Icon(Icons.check),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      widget.onSubmitted?.call(false);
-                      Get.back();
-                    },
-                    icon: const Icon(Icons.cancel),
-                  ),
-                ],
+              Expanded(
+                flex: 1,
+                child: Row(
+                  // OK and Cancel button
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        widget.onSubmitted?.call(true);
+                        Get.back();
+                      },
+                      icon: const Icon(Icons.check),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        widget.onSubmitted?.call(false);
+                        Get.back();
+                      },
+                      icon: const Icon(Icons.cancel),
+                    ),
+                  ],
+                ),
               )
             ],
           ),

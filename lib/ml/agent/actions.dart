@@ -77,6 +77,7 @@ class MyAction {
     } else {
       prompts = act!.input;
     }
+    prompts += AgentPromts.askForJson;
     for (var i = 0; i < 2; i++) {
       try {
         ChatGPTRes res = await DB.chatGPTProxy.sendMessage(
@@ -102,7 +103,8 @@ class MyAction {
           return outputMap;
         } catch (e) {
           if (outputJsonFormat != '') {
-            prompts = '${AgentPromts.askForJson}:$outputJsonFormat';
+            prompts =
+                'outputJsonFormat: $outputJsonFormat,  ${AgentPromts.askForJson}:';
           } else {
             prompts = AgentPromts.askForJson;
           }

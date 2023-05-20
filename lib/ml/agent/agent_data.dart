@@ -343,6 +343,21 @@ class AgentData {
         ..experiences = experiences);
       Log.log.fine('saveExperience: newId $newId');
     });
+    // 如果同一个goal有多个experience，按分从高到低、时间从后到前排序，删除最后一个
+    List<SeeGoalExperiences> experiencesList = DB.isar?.seeGoalExperiences
+            .where()
+            .goalIdEqualTo(goal.id)
+            .sortByScoreDesc()
+            .thenByInsertTimeDesc()
+            .findAllSync() ??
+        [];
+    if (experiencesList.length > 5) {
+      await DB.isar?.writeTxn(() async {
+        await DB.isar?.seeGoalExperiences
+            .delete(experiencesList[experiencesList.length - 1].id);
+        Log.log.fine('saveExperience: lastExperience deleted');
+      });
+    }
     return true;
   }
 

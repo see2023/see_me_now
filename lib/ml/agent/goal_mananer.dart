@@ -266,10 +266,11 @@ Returns a set of tasks that can be executed step by step, with the following str
 an array containing 1-3 elements with description: string, the description of the task, 
 estimatedTimeInMinutes: the estimated time to live in minutes. Use 0 instead of null if you don't know, only one number is allowed.
 Based on the userInput task description, you can divide the main task into 2-3 sub-tasks or add 1-2 additional sub-tasks based on past experience.
-Note that this refers to specific tasks, not experiences. Important! Please reply in Json!!
+Note that this refers to specific tasks, not experiences. 
 ''',
       'outputJsonFormat': '''
 {
+  "reason": "...",
   "tasks":
 [
   {
@@ -287,7 +288,7 @@ Note that this refers to specific tasks, not experiences. Important! Please repl
         inMap: inputMap,
         sysPrompt: sysPromts,
         outputJsonFormat:
-            '{"tasks": [{ "description": "string", "estimatedTimeInMinutes": "number" }]}');
+            '{"reason":"...", "tasks": [{ "description": "string", "estimatedTimeInMinutes": "number" }]}');
     await action.excute();
     Log.log.fine('askGptForTasks output: ${action.act?.output}');
     try {
@@ -407,9 +408,10 @@ Note that this refers to specific tasks, not experiences. Important! Please repl
       'constraints': '''
 Please reply an array containing similar experience after optimization;
 Every experience should be short, less than 100 words;
-Respond in JSON format as described below, Important! Please reply in Json!!''',
+''',
       'outputJsonFormat': '''
 {
+  "reason": "...",
   "experiences":[
     "experience 1", "experience 2", "experience 3"
   ]
@@ -420,7 +422,7 @@ Respond in JSON format as described below, Important! Please reply in Json!!''',
         goal.id, 0, ActionType.askGptForNewExperience, '',
         inMap: inputMap,
         sysPrompt: sysPromts,
-        outputJsonFormat: '{"experiences": []}');
+        outputJsonFormat: '{"reason":"...", "experiences": []}');
     await action.excute();
     Log.log.fine('askGptForNewExperience output: ${action.act?.output}');
     try {
@@ -527,10 +529,10 @@ Respond in JSON format as described below, Important! Please reply in Json!!''',
     const String notRecommendKey = ' (Not recommended)';
     const String recommendKey = ' (recommended)';
     if (questionCount < 1) {
-      addtionMap[AgentPromts.progressKeyNeedSearch] = notRecommendKey;
+      addtionMap[AgentPromts.progressActNeedSearch] = notRecommendKey;
     } else {
       if (Random().nextDouble() < 0.3) {
-        addtionMap[AgentPromts.progressKeyNeedSearch] = recommendKey;
+        addtionMap[AgentPromts.progressActNeedSearch] = recommendKey;
       }
     }
     for (int i = 0; i < keys.length; i++) {
@@ -582,7 +584,7 @@ Respond in JSON format as described below, Important! Please reply in Json!!''',
       'outputJsonFormat': reactions,
       'constraints':
           '''if goalName is Chinese, please reply in Chinese; Otherwise, please use English.
-The answer should be brief and output like outputJsonFormat. Important! Please reply in Json!!
+The answer should be brief and output like outputJsonFormat.
 ''',
     };
     MyAction action = MyAction(
@@ -592,6 +594,7 @@ The answer should be brief and output like outputJsonFormat. Important! Please r
     Log.log
         .fine('askGptForTaskProgressEvaluation output: ${action.act?.output}');
     String gptReplyText = '';
+    String reason = '';
     String question = '';
     String answer = '';
     bool replyOk = false;
@@ -600,10 +603,14 @@ The answer should be brief and output like outputJsonFormat. Important! Please r
     // Perform up to 3 user inquiries or search operations based on the last return, then give the user a prompt
     try {
       String nextInput = '';
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 5; i++) {
         gptReplyText = action.outputMap?['text'] ?? '';
-        switch (action.outputMap?['type']) {
-          case AgentPromts.progressKeyNeedMoreInfo:
+        reason = action.outputMap?['reason'] ?? '';
+        if (gptReplyText.isEmpty && reason.isNotEmpty) {
+          gptReplyText = reason;
+        }
+        switch (action.outputMap?['act']) {
+          case AgentPromts.progressActNeedMoreInfo:
             nextInput =
                 await askUserCommon(goal, gptReplyText, showAvatar: true);
             if (nextInput.isEmpty) {
@@ -614,10 +621,15 @@ The answer should be brief and output like outputJsonFormat. Important! Please r
             Log.log.info(
                 'try time $i, askGptForTaskProgressEvaluation userFeedback: $nextInput');
             break;
-          case AgentPromts.progressKeyNeedSearch:
+          case AgentPromts.progressActNeedSearch:
             MyAction subAction = MyAction(
-                goal.id, task.id, ActionType.search, gptReplyText,
-                sysPrompt: sysPromts, parentMessageIdIn: parentMessageId);
+              goal.id,
+              task.id,
+              ActionType.search,
+              gptReplyText,
+              sysPrompt: sysPromts,
+              parentMessageIdIn: parentMessageId,
+            );
             await subAction.excute();
             Log.log.info(
                 'try time $i, askGptForTaskProgressEvaluation search output: ${subAction.act?.output}');
@@ -628,7 +640,7 @@ The answer should be brief and output like outputJsonFormat. Important! Please r
               return false;
             }
             break;
-          case AgentPromts.progressKeyQuiz:
+          case AgentPromts.progressActQuiz:
             isQuiz = true;
             question = action.outputMap?['question'] ?? '';
             answer = action.outputMap?['answer'] ?? '';
@@ -639,7 +651,7 @@ The answer should be brief and output like outputJsonFormat. Important! Please r
             }
             replyOk = true;
             break;
-          case AgentPromts.progressKeyTipsToUser:
+          case AgentPromts.progressActTipsToUser:
             if (gptReplyText.isEmpty) {
               Log.log.warning(
                   'try time $i, askGptForTaskProgressEvaluation gptReplyText is empty, ${action.act?.output}');
@@ -649,18 +661,18 @@ The answer should be brief and output like outputJsonFormat. Important! Please r
             break;
           default:
             Log.log.warning(
-                'try time $i, askGptForTaskProgressEvaluation type is wrong, ${action.act?.output}');
+                'try time $i, askGptForTaskProgressEvaluation act is wrong, ${action.act?.output}');
             return false;
         }
         if (replyOk) {
           break;
         }
-        nextInput = '''{"reply":"$nextInput", "outputJsonFormat":
-$reactions }
-''';
+        nextInput = '''{"reply":"$nextInput" }''';
         action = MyAction(goal.id, task.id,
             ActionType.askGptForTaskProgressEvaluation, nextInput,
-            sysPrompt: sysPromts, parentMessageIdIn: parentMessageId);
+            sysPrompt: sysPromts,
+            parentMessageIdIn: parentMessageId,
+            outputJsonFormat: reactions);
         await action.excute();
         parentMessageId = action.parentMessageId;
         Log.log.fine(

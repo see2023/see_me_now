@@ -37,6 +37,15 @@ class DB {
     return promptsMap[DB.defaultPromptId]?.name ?? 'See';
   }
 
+  static String getFirstPromt() {
+    return promptsMap[DB.firstPromptId]?.text ?? '';
+  }
+
+  static setDefaultPromptId(int id) {
+    DB.defaultPromptId = id;
+    setting.putInt(SettingKeyConstants.defaultPromptId, id);
+  }
+
   static Future<bool> init() async {
     try {
       Directory appDocDir = await getApplicationDocumentsDirectory();
@@ -196,7 +205,8 @@ class DB {
     return ret ?? -1;
   }
 
-  static void deletePrompt(int promptId) async {
+  static Future<void> deletePrompt(int promptId) async {
+    promptsMap.remove(promptId);
     try {
       await isar?.writeTxn(() async {
         await isar?.prompts.delete(promptId);
@@ -231,12 +241,6 @@ class DB {
         model: 'gpt-3.5-turbo',
         voiceName: 'zh-CN-YunxiNeural');
     defaultPromptId = await setPrompt(0,
-        name: 'Assistant',
-        text:
-            'You are talking to an elementary school student. Please keep your content healthy and your reply short and concise, and reply with the same language as the latest question',
-        model: 'gpt-3.5-turbo',
-        voiceName: 'zh-CN-YunfengNeural');
-    await setPrompt(0,
         name: 'Friend',
         text:
             'I want you to act as my friend. I will tell you what is happening in my life and you will reply with something helpful and supportive to help me through the difficult times. Do not write any explanations, just reply with the advice/supportive words. My first request is: ',
@@ -245,19 +249,7 @@ class DB {
     await setPrompt(0,
         name: '辅导老师',
         text:
-            '我是一名小学生，可能问你小学的语文、数学、或英语问题，请用简单明了的语言回复我。 但请不要直接告诉我答案，而是逐步引导我思考出解决问题的办法。不要进行过多的轮次，必须在5轮内告诉我答案。强调一下，尽可能不要直接告诉答案，而是经过2，3轮引导、提醒。',
-        model: 'gpt-3.5-turbo',
-        voiceName: 'zh-CN-XiaomengNeural');
-    await setPrompt(0,
-        name: '中文老师',
-        text:
-            '我想让你扮演一个中文老师。我会用中文和你说话，你也会用中文回答我，我希望你的回复保持简洁，限制在100字以内，同时语句通顺，句意流畅，言辞优美，叙写生动。',
-        model: 'gpt-3.5-turbo',
-        voiceName: 'zh-CN-XiaomengNeural');
-    await setPrompt(0,
-        name: '中文美化',
-        text:
-            '我想让你扮演一个中文老师。我会用中文和你说话，你也会用中文回答我，将我的话换一种表达方式，表达完全一样的意思，不要添加、修改内容，也不要加解释。我希望你的回复保持简洁，限制在100字以内，同时语句通顺，句意流畅，言辞优美。',
+            '我是一名小学生，可能问你小学语文、数学、或英语问题，请用100字以内的句子回复我，内容通俗易懂，语句通顺，语法正确，不要出现错别字。我的第一个问题是：',
         model: 'gpt-3.5-turbo',
         voiceName: 'zh-CN-XiaomengNeural');
     await setPrompt(0,
@@ -267,7 +259,7 @@ class DB {
         model: 'gpt-3.5-turbo',
         voiceName: 'en-US-AriaNeural');
     await setPrompt(0,
-        name: 'English opt',
+        name: 'English translator',
         text:
             'I want you to act as an English translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it in Short, idiomatic spoken English. I want you to only reply the correction, the improvements and nothing else, do not write explanations.',
         model: 'gpt-3.5-turbo',
@@ -279,6 +271,16 @@ class DB {
         model: 'gpt-3.5-turbo',
         voiceName: 'zh-CN-YunhaoNeural');
     return defaultPromptId;
+  }
+
+  static Future<void> resetPrompts() async {
+    promptsMap.clear();
+    await DB.isar?.writeTxn(() async {
+      await DB.isar?.prompts.clear();
+      Log.log.info('resetPrompts() prompts cleared');
+    });
+    firstPromptId = await initPrompsIfEmpty();
+    await refreshPromptMap();
   }
 
   //  how to query id > ? order by id desc?

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:see_me_now/3d/glb_viewer.dart';
+import 'package:see_me_now/data/setting.dart';
 import 'package:see_me_now/data/topics_model.dart';
 import 'package:see_me_now/messages.dart';
 import 'package:see_me_now/ml/agent/goal_mananer.dart';
@@ -38,6 +39,15 @@ class MyApp extends StatefulWidget {
     homePageStateKey.currentState?.changeTitle(titile);
   }
 
+  static void updateLocale(String userLanguage) {
+    if (userLanguage.isEmpty) return;
+    if (userLanguage == DB.setting.userLanguage) return;
+    DB.setting.changeSetting(SettingKeyConstants.userLanguage, userLanguage);
+    LangInfo langInfo = LangMap.langMap[DB.setting.userLanguage] ?? LangInfo();
+    Locale locale = Locale(langInfo.langCode, langInfo.langCode);
+    Get.updateLocale(locale);
+  }
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -71,9 +81,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    LangInfo langInfo = LangMap.langMap[DB.setting.userLanguage] ?? LangInfo();
     return GetMaterialApp(
       translations: Messages(),
-      locale: const Locale('zh', 'CN'),
+      locale: Locale(langInfo.langCode, langInfo.countryCode),
       // locale: Get.deviceLocale,
       fallbackLocale: const Locale('en', 'US'),
       debugShowCheckedModeBanner: false,

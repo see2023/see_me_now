@@ -573,8 +573,8 @@ Every experience should be short, less than 100 words;
       'goalName': goalState.goalName,
       'goalDiscription': goalState.goalDescription,
       'taskDiscription': task.description,
-      'estimatedTime': task.estimatedTimeInMinutes,
-      'timeSpent': DateTime.now()
+      'estimatedTimeInMinutes': task.estimatedTimeInMinutes,
+      'timeSpentInMinutes': DateTime.now()
           .difference(task.startTime ?? task.insertTime)
           .inMinutes,
       'conversations': conversations,
@@ -583,8 +583,7 @@ Every experience should be short, less than 100 words;
       'envStates': goalState.envStates.map((e) => e.toString()).toList(),
       'outputJsonFormat': reactions,
       'constraints':
-          '''if goalName is Chinese, please reply in Chinese; Otherwise, please use English.
-The answer should be brief and output like outputJsonFormat.
+          '''The answer should be brief and output like outputJsonFormat with required "act".
 ''',
     };
     MyAction action = MyAction(
@@ -606,13 +605,11 @@ The answer should be brief and output like outputJsonFormat.
       for (int i = 0; i < 5; i++) {
         gptReplyText = action.outputMap?['text'] ?? '';
         reason = action.outputMap?['reason'] ?? '';
-        if (gptReplyText.isEmpty && reason.isNotEmpty) {
-          gptReplyText = reason;
-        }
         switch (action.outputMap?['act']) {
           case AgentPromts.progressActNeedMoreInfo:
-            nextInput =
-                await askUserCommon(goal, gptReplyText, showAvatar: true);
+            gptReplyText = '$reason\n$gptReplyText';
+            nextInput = await askUserCommon(goal, gptReplyText,
+                taskId: task.id, showAvatar: true);
             if (nextInput.isEmpty) {
               Log.log.warning(
                   'try time $i, askGptForTaskProgressEvaluation userFeedback is empty');
@@ -652,6 +649,7 @@ The answer should be brief and output like outputJsonFormat.
             replyOk = true;
             break;
           case AgentPromts.progressActTipsToUser:
+            gptReplyText = '$reason\n$gptReplyText';
             if (gptReplyText.isEmpty) {
               Log.log.warning(
                   'try time $i, askGptForTaskProgressEvaluation gptReplyText is empty, ${action.act?.output}');

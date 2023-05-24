@@ -5,6 +5,8 @@ import 'package:see_me_now/data/db.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:card_settings/card_settings.dart';
 import 'package:see_me_now/data/setting.dart';
+import 'package:see_me_now/main.dart';
+import 'package:see_me_now/messages.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -51,6 +53,11 @@ class _SettingWidgetState extends State<SettingWidget> {
   @override
   Widget build(BuildContext context) {
     _proxyUrl = DB.seeProxy.urlPrefix;
+    // from LangMap.langMap.langName
+    List<String> languageList = [];
+    LangMap.langMap.forEach((key, value) {
+      languageList.add(value.langName);
+    });
     String initItem = SettingValueConstants.proxyUrls
         .firstWhere((element) => element == _proxyUrl, orElse: () => 'custom');
     if (initItem == 'custom') {
@@ -206,6 +213,25 @@ class _SettingWidgetState extends State<SettingWidget> {
                     Log.log.fine('changing user description: $value');
                     DB.setting.changeSetting(
                         SettingKeyConstants.userDescription, value);
+                  },
+                ),
+                CardSettingsListPicker(
+                  key: const Key('userLanguage'),
+                  label: 'Language'.tr,
+                  items: languageList,
+                  initialItem:
+                      LangMap.langMap[DB.setting.userLanguage]!.langName,
+                  onChanged: (value) {
+                    Log.log.fine('changing user language: $value');
+                    // find key of LangMap.langMap
+                    String? key;
+                    for (var entry in LangMap.langMap.keys) {
+                      if (LangMap.langMap[entry]!.langName == value) {
+                        key = entry;
+                        break;
+                      }
+                    }
+                    MyApp.updateLocale(key ?? '');
                   },
                 ),
               ]),

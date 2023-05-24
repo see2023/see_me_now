@@ -14,13 +14,13 @@ class AgentPromts {
   static const String progressActTipsToUser = 'tipsToUser';
   static Map<String, String> progressEvaluationOutputFormatMap = {
     progressActNeedMoreInfo:
-        '{"reason":"...", "act":"needMoreInfo", "text":"The information you want from your users"}',
+        '{"act":"needMoreInfo", "reason":"...", "text":"The information you want from your users"}',
     progressActQuiz:
-        '{"reason":"...", "act": "quiz", "question": "...", "answer": "..."}',
+        '{"act": "quiz", "reason":"...", "question": "...", "answer": "..."}',
     progressActNeedSearch:
-        '{"reason":"...", "act": "needSearch", "text": "less then 10 words as search key words"}',
+        '{ "act": "needSearch","reason":"...","text": "less then 10 words as search key words"}',
     progressActTipsToUser:
-        '{"reason":"...", "act":"tipsToUser", "text":"Tips for user(only when you are sure)"}'
+        '{"act":"tipsToUser","reason":"...","text":"Tips for user(only when you are sure)"}'
   };
   static String gptPromptPrefixInit = '''
 I hope you play the role of an intelligent decision assistant, helping users achieve their goals. 
@@ -38,7 +38,6 @@ Each time you will receive a JSON input, analyze the goal and current situation,
   }
 
   static String askForJson = '''
-
 Refer to the requested format, the output json is:
 ''';
   static Map<ActionType, String> agentPrompts = {
@@ -50,7 +49,7 @@ and yesterday's tasks to achieve the same goal: lastTasks,
 as well as the experience summarized from historical tasks for the same goal: experience. 
 ---Output---
 1) Fill in the json field "reason" with the reason why you return these tasks;
-2) "tasks" is the list of tasks you created after analysis, including task description(if userInput is Chinese, please reply in Chinese; Otherwise, please use English) and estimated time (in minutes),
+2) "tasks" is the list of tasks you created after analysis, including task description and estimated time (in minutes),
  sorted by importance from front to back, and outputted in the required JSON format.
 """,
     ActionType.askGptForNewExperience: """$gptPromptPrefixJson
@@ -60,8 +59,8 @@ This time, you will obtain the global state from the input JSON: goalState, havi
   goalDescription, 
   An array of tasks: 
     A description of a just-completed task: taskDescription,
-    the estimated time: estimatedTime,
-    the time spent: timeSpent,
+    the estimated time: estimatedTimeInMinutes,
+    the time spent: timeSpentInMinutes,
     the score given by the user himself for the completion of this task: score,
   An other array of indexes from environment:
     Meaning of status values: stateName,
@@ -80,8 +79,8 @@ This time, you will obtain these fields from input JSON:
   goalName,
   goalDescription, 
   taskDescription,
-  the estimated time of this task: estimatedTime,
-  the time spent of this task: timeSpent,
+  the estimated time of this task: estimatedTimeInMinutes,
+  the time spent of this task: timeSpentInMinutes,
   the experiences used to generate this task for this goal: experiencesUsed,
   conversations between user and AI: conversations,
   other conversations between user and AI: minorConversations, (answer is cut off, no supplement required),
@@ -92,11 +91,11 @@ This time, you will obtain these fields from input JSON:
     positive = true here means that the higher score is better, vice versa.
 ---Output---
 0) Fill in the json field "reason" with the reason why you chose this action;
-1) You can ask the user about his real progress and other information that will help you to judge with: {"reason":"...", "act":"needMoreInfo", "text":"..."};
-or 2) Propose a small quiz with answers to help users review and deepen their understanding: {"reason":"...", "act":"quiz", "question":"...", "answer":"..."};
+1) You can ask the user about his real progress and other information that will help you to judge with: {"act":"needMoreInfo", "reason":"...", "text":"..."};
+or 2) Propose a small quiz with answers to help users review and deepen their understanding: {"act":"quiz", "reason":"...", "question":"...", "answer":"..."};
 or 3) Your knowledge is only available until September 2021, the current time is 2023, so when you encounter any time-sensitive content(News, IT Technologies ..); 
-      perform a search first with {"reason":"...", "act":"needSearch", "text":"..."};
-or 4) If there is enough reason, give reasonable advice to ensure that the task is completed on time with: {"reason":"...", "act":"tipsToUser", "text":"..."};
+      perform a search first with {"act":"needSearch","reason":"...","text":"..."};
+or 4) If there is enough reason, give reasonable advice to ensure that the task is completed on time with: {"act":"tipsToUser", "reason":"...", "text":"..."};
 Please cherish the resources and don't caught in the Q&A cycle.
 Always reply in required JSon!
 """

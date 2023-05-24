@@ -77,7 +77,8 @@ class MyAction {
     } else {
       prompts = act!.input;
     }
-    prompts += AgentPromts.askForJson;
+    String langAndFormat = '\n${DB.getFirstPromt()}\n${AgentPromts.askForJson}';
+    prompts += langAndFormat;
     for (var i = 0; i < 2; i++) {
       try {
         ChatGPTRes res = await DB.chatGPTProxy.sendMessage(
@@ -95,7 +96,7 @@ class MyAction {
           act?.output = extractJsonPart(res.text);
           if (act?.output == null || act?.output == '') {
             Log.log.warning('$i askGpt return json error: ${res.text}');
-            prompts = AgentPromts.askForJson;
+            prompts = langAndFormat;
             continue;
           }
           outputMap = jsonDecode(act?.output ?? '');
@@ -103,10 +104,9 @@ class MyAction {
           return outputMap;
         } catch (e) {
           if (outputJsonFormat != '') {
-            prompts =
-                'outputJsonFormat: $outputJsonFormat,  ${AgentPromts.askForJson}:';
+            prompts = 'outputJsonFormat: $outputJsonFormat,  $langAndFormat';
           } else {
-            prompts = AgentPromts.askForJson;
+            prompts = langAndFormat;
           }
           Log.log.warning('$i askGpt json parse error: ${res.text}}');
           continue;

@@ -26,6 +26,8 @@ class Messages extends Translations {
           'GoalDescription': 'Description',
           'GoalPriority': 'priority',
           'GoalExperience': 'Experience',
+          'ReservedPrompt': 'Used by auto-reminder',
+          'Language': 'Language',
         },
         'zh_CN': {
           'askUserForTasks': '你今天有什么 @name 的计划吗?',
@@ -50,6 +52,24 @@ class Messages extends Translations {
           'GoalDescription': '描述',
           'GoalPriority': '优先级',
           'GoalExperience': '经验',
+          'ReservedPrompt': '自动提醒回复使用',
+          'Language': '语言',
         },
       };
+}
+
+class LangInfo {
+  String langCode = 'zh';
+  String countryCode = 'CN';
+  String langName = '中文';
+}
+
+class LangMap {
+  static Map<String, LangInfo> langMap = {
+    'zh_CN': LangInfo(),
+    'en_US': LangInfo()
+      ..langCode = 'en'
+      ..countryCode = 'US'
+      ..langName = 'English',
+  };
 }

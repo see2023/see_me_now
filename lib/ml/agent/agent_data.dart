@@ -417,11 +417,11 @@ class AgentData {
     if (task.estimatedTimeInMinutes == 0) {
       return 0;
     }
-    int timeSpent = getTimeSpentInMinutes(task);
-    if (timeSpent == 0) {
+    int timeSpentInMinutes = getTimeSpentInMinutes(task);
+    if (timeSpentInMinutes == 0) {
       return 0;
     }
-    return timeSpent / task.estimatedTimeInMinutes;
+    return timeSpentInMinutes / task.estimatedTimeInMinutes;
   }
 
   Future<GoalState?> readStateOfGoal(SeeGoal goal) async {
@@ -536,6 +536,9 @@ class AgentData {
 
   Future<bool> saveConversation(int goalId, int taskId, String text,
       {String from = conversationIdAssistant}) async {
+    if (text.length > 150) {
+      text = text.substring(0, 150);
+    }
     try {
       await DB.isar?.writeTxn(() async {
         await DB.isar?.conversations.put(Conversation()
@@ -559,7 +562,7 @@ class AgentData {
             .goalIdEqualTo(goalId)
             .filter()
             .taskIdEqualTo(taskId)
-            .sortByInsertTimeDesc()
+            .sortByInsertTime()
             .limit(num)
             .findAll() ??
         [];

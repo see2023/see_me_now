@@ -16,6 +16,7 @@ class SettingKeyConstants {
   static const String defaultPromptId = 'defaultPromptId';
   static const String userNickname = 'userNickname';
   static const String userDescription = 'userDescription';
+  static const String userLanguage = 'userLanguage';
 }
 
 class Setting {
@@ -26,6 +27,7 @@ class Setting {
   bool enablePoseReminder = true;
   String userNickname = '';
   String userDescription = '';
+  String userLanguage = 'zh_CN';
   Box? _settingsBox;
   init(String settingFilePath) async {
     Hive.init(settingFilePath);
@@ -56,6 +58,8 @@ class Setting {
         _settingsBox?.get(SettingKeyConstants.userDescription) ?? 'a pupil';
     AgentPromts.changeGptPromptPrefix(
         DB.setting.userNickname, DB.setting.userDescription);
+    DB.setting.userLanguage =
+        _settingsBox?.get(SettingKeyConstants.userLanguage) ?? 'zh_CN';
   }
 
   close() {
@@ -118,6 +122,11 @@ class Setting {
             SettingKeyConstants.userDescription, DB.setting.userDescription);
         AgentPromts.changeGptPromptPrefix(
             DB.setting.userNickname, DB.setting.userDescription);
+        break;
+      case SettingKeyConstants.userLanguage:
+        DB.setting.userLanguage = value;
+        _settingsBox?.put(
+            SettingKeyConstants.userLanguage, DB.setting.userLanguage);
         break;
     }
   }

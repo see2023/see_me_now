@@ -75,6 +75,10 @@ class _SimpleGoalWidgetState extends State<SimpleGoalWidget> {
                       );
                     } else {
                       // show SimpleTask
+                      TaskInfo? taskInfo = widget.goal?.tasks?[index - 1];
+                      if (taskInfo == null) {
+                        return Container();
+                      }
                       return Container(
                         padding: const EdgeInsets.all(10.0),
                         decoration: BoxDecoration(
@@ -88,25 +92,29 @@ class _SimpleGoalWidgetState extends State<SimpleGoalWidget> {
                           children: [
                             Expanded(
                               flex: 5,
-                              child: TextField(
-                                maxLines: null,
-                                textAlign: TextAlign.left,
-                                controller: TextEditingController(
-                                    text: widget.goal?.tasks?[index - 1]
-                                            .description ??
-                                        ''),
-                                onChanged: (value) {
-                                  setState(() {
-                                    widget.goal?.tasks?[index - 1].description =
-                                        value;
-                                  });
-                                },
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    maxLines: null,
+                                    textAlign: TextAlign.left,
+                                    controller: TextEditingController(
+                                        text:
+                                            '${taskInfo.description}(${taskInfo.keyword})'),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        widget.goal?.tasks?[index - 1]
+                                            .description = value;
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                             Expanded(
                               flex: 1,
                               child: TextField(
                                 textAlign: TextAlign.center,
+                                keyboardType: TextInputType.number,
                                 controller: TextEditingController(
                                     text: widget.goal?.tasks?[index - 1]
                                             .estimatedTimeInMinutes
@@ -114,9 +122,14 @@ class _SimpleGoalWidgetState extends State<SimpleGoalWidget> {
                                         ''),
                                 onChanged: (value) {
                                   setState(() {
+                                    int timeInMinutes = 0;
+                                    try {
+                                      timeInMinutes = int.parse(value);
+                                    } catch (e) {
+                                      timeInMinutes = 0;
+                                    }
                                     widget.goal?.tasks?[index - 1]
-                                            .estimatedTimeInMinutes =
-                                        int.parse(value);
+                                        .estimatedTimeInMinutes = timeInMinutes;
                                   });
                                 },
                               ),
@@ -236,7 +249,7 @@ class GoalWidget extends StatefulWidget {
   List<int>? orderedGoals = [];
   Map<int, SeeGoal>? goalsMap;
   Map<int, SeeTask>? tasksMap;
-  Function(int, TaskStatus, {int score})? changeTaskStatus;
+  Function(int, TaskStatus, {int score, String evaluation})? changeTaskStatus;
   Function(int)? onAddNewTask;
   GoalWidget(
       {Key? key,
@@ -405,10 +418,12 @@ class _GoalWidgetState extends State<GoalWidget> {
                                           Get.dialog(RatingWidget(
                                             goal: goal,
                                             task: task,
-                                            onRatingSubmit: (int rating) {
+                                            onRatingSubmit: (int rating,
+                                                String evaluation) {
                                               widget.changeTaskStatus?.call(
                                                   task.id, TaskStatus.done,
-                                                  score: rating);
+                                                  score: rating,
+                                                  evaluation: evaluation);
                                               setState(() {
                                                 task.status = TaskStatus.done;
                                               });
@@ -563,6 +578,7 @@ class _GoalExperienceWidgetState extends State<GoalExperienceWidget> {
                           flex: 3,
                           child: TextField(
                             textAlign: TextAlign.left,
+                            keyboardType: TextInputType.number,
                             controller: TextEditingController(
                                 text: goal?.priority.toString() ?? ''),
                             onChanged: (String value) {

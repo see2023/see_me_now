@@ -20,9 +20,21 @@ class TaskInfo {
   int taskId = 0;
   String description = '';
   int estimatedTimeInMinutes = 0;
-  TaskInfo(this.description, this.estimatedTimeInMinutes);
+  String keyword = '';
+  TaskInfo(this.description, this.estimatedTimeInMinutes, {this.keyword = ''});
   factory TaskInfo.fromJson(Map<String, dynamic> json) {
-    return TaskInfo(json['description'], json['estimatedTimeInMinutes']);
+    // List<String> keywordsTmp = [];
+    // if (json['keywords'] != null) {
+    //   keywordsTmp = List<String>.from(json['keywords']);
+    // }
+    // // remove duplicates and keep at most 3 keywords, use lower case
+    // keywordsTmp = keywordsTmp.map((e) => e.toLowerCase()).toList();
+    // keywordsTmp = keywordsTmp.toSet().toList();
+    // if (keywordsTmp.length > 3) {
+    //   keywordsTmp = keywordsTmp.sublist(0, 3);
+    // }
+    return TaskInfo(json['description'], json['estimatedTimeInMinutes'],
+        keyword: json['keyword']);
   }
 }
 
@@ -47,6 +59,7 @@ class TaskScore {
   int estimatedTimeInMinutes = 0;
   int timeSpentInMinutes = 0;
   double score = 0;
+  String evaluation = '';
   @override
   String toString() {
     return jsonEncode({
@@ -54,6 +67,7 @@ class TaskScore {
       'estimatedTimeInMinutes': estimatedTimeInMinutes,
       'timeSpentInMinutes': timeSpentInMinutes,
       'score': score,
+      'evaluation': evaluation,
     });
   }
 }
@@ -242,7 +256,8 @@ class AgentData {
     goal.tasks = [...goal.tasks, task.id];
   }
 
-  updateTask(int taskId, TaskStatus status, {int score = 0}) async {
+  updateTask(int taskId, TaskStatus status,
+      {int score = 0, String evaluation = ''}) async {
     SeeTask? task = tasksMap[taskId];
     if (task == null) {
       Log.log.warning('updateTask: task not found $taskId');
@@ -256,6 +271,7 @@ class AgentData {
       }
       task.status = status;
       if (score > 0) task.score = score;
+      if (evaluation != '') task.evaluation = evaluation;
       if (status == TaskStatus.done ||
           status == TaskStatus.cancelled ||
           status == TaskStatus.failed) {
@@ -296,6 +312,7 @@ class AgentData {
         SeeTask seeTask = SeeTask()
           ..goalId = simpleGoal.goalId
           ..description = task.description
+          ..keyword = task.keyword
           ..estimatedTimeInMinutes = task.estimatedTimeInMinutes;
         await addTask(simpleGoal.goalId, seeTask, true);
       }
@@ -334,16 +351,49 @@ class AgentData {
     return experience;
   }
 
-  Future<bool> saveExperience(
-      SeeGoal goal, int score, List<String> experiences) async {
+  Future<List<String>> getExperienceWithKeywords(
+      int goalId, List<String> keywords) async {
+    List<String> experience = [];
+    // search by keywords
+    for (String keyword in keywords) {
+      keyword = keyword.toLowerCase();
+      List<List<String>> experiences = await DB.isar?.seeGoalExperiences
+              .where()
+              .goalIdEqualTo(goalId)
+              .filter()
+              .keywordsElementEqualTo(keyword, caseSensitive: true)
+              .sortByScoreDesc()
+              .thenByInsertTimeDesc()
+              .limit(10)
+              .experiencesProperty()
+              .findAll() ??
+          [];
+      for (List<String> exps in experiences) {
+        experience.addAll(exps);
+      }
+    }
+    experience = experience.toSet().toList();
+    // select random 5 experiences
+    if (experience.length > 5) {
+      experience.shuffle();
+      experience = experience.sublist(0, 5);
+    }
+    if (experience.isNotEmpty) {
+      return experience;
+    }
+    return await getExperience(goalId);
+  }
+
+  Future<bool> saveExperience(SeeGoal goal, int score, List<String> experiences,
+      List<String> keywords) async {
     await DB.isar?.writeTxn(() async {
       int? newId = await DB.isar?.seeGoalExperiences.put(SeeGoalExperiences()
         ..goalId = goal.id
         ..score = score
-        ..experiences = experiences);
+        ..experiences = experiences
+        ..keywords = keywords);
       Log.log.fine('saveExperience: newId $newId');
     });
-    // 如果同一个goal有多个experience，按分从高到低、时间从后到前排序，删除最后一个
     List<SeeGoalExperiences> experiencesList = DB.isar?.seeGoalExperiences
             .where()
             .goalIdEqualTo(goal.id)
@@ -351,7 +401,7 @@ class AgentData {
             .thenByInsertTimeDesc()
             .findAllSync() ??
         [];
-    if (experiencesList.length > 5) {
+    if (experiencesList.length > 100) {
       await DB.isar?.writeTxn(() async {
         await DB.isar?.seeGoalExperiences
             .delete(experiencesList[experiencesList.length - 1].id);
@@ -441,6 +491,7 @@ class AgentData {
         taskState.estimatedTimeInMinutes = task.estimatedTimeInMinutes;
         taskState.timeSpentInMinutes = getTimeSpentInMinutes(task);
         taskState.score = task.score.toDouble();
+        taskState.evaluation = task.evaluation;
         goalState.taskScores.add(taskState);
       }
       // read state of this goal before today
@@ -562,6 +613,22 @@ class AgentData {
             .goalIdEqualTo(goalId)
             .filter()
             .taskIdEqualTo(taskId)
+            .sortByInsertTime()
+            .limit(num)
+            .findAll() ??
+        [];
+
+    List<String> texts = [];
+    for (Conversation tip in tips) {
+      texts.add('${tip.from}: ${tip.text}');
+    }
+    return texts;
+  }
+
+  Future<List<String>> getConversationOfGoal(int goalId, {int num = 6}) async {
+    List<Conversation> tips = await DB.isar?.conversations
+            .where()
+            .goalIdEqualTo(goalId)
             .sortByInsertTime()
             .limit(num)
             .findAll() ??

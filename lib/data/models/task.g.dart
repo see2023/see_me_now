@@ -1572,8 +1572,13 @@ const SeeGoalExperiencesSchema = CollectionSchema(
       name: r'insertTime',
       type: IsarType.dateTime,
     ),
-    r'score': PropertySchema(
+    r'keywords': PropertySchema(
       id: 3,
+      name: r'keywords',
+      type: IsarType.stringList,
+    ),
+    r'score': PropertySchema(
+      id: 4,
       name: r'score',
       type: IsarType.long,
     )
@@ -1622,6 +1627,19 @@ const SeeGoalExperiencesSchema = CollectionSchema(
           caseSensitive: false,
         )
       ],
+    ),
+    r'keywords': IndexSchema(
+      id: -5743176046722291771,
+      name: r'keywords',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'keywords',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -1645,6 +1663,13 @@ int _seeGoalExperiencesEstimateSize(
       bytesCount += value.length * 3;
     }
   }
+  bytesCount += 3 + object.keywords.length * 3;
+  {
+    for (var i = 0; i < object.keywords.length; i++) {
+      final value = object.keywords[i];
+      bytesCount += value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -1657,7 +1682,8 @@ void _seeGoalExperiencesSerialize(
   writer.writeStringList(offsets[0], object.experiences);
   writer.writeLong(offsets[1], object.goalId);
   writer.writeDateTime(offsets[2], object.insertTime);
-  writer.writeLong(offsets[3], object.score);
+  writer.writeStringList(offsets[3], object.keywords);
+  writer.writeLong(offsets[4], object.score);
 }
 
 SeeGoalExperiences _seeGoalExperiencesDeserialize(
@@ -1671,7 +1697,8 @@ SeeGoalExperiences _seeGoalExperiencesDeserialize(
   object.goalId = reader.readLong(offsets[1]);
   object.id = id;
   object.insertTime = reader.readDateTime(offsets[2]);
-  object.score = reader.readLong(offsets[3]);
+  object.keywords = reader.readStringList(offsets[3]) ?? [];
+  object.score = reader.readLong(offsets[4]);
   return object;
 }
 
@@ -1689,6 +1716,8 @@ P _seeGoalExperiencesDeserializeProp<P>(
     case 2:
       return (reader.readDateTime(offset)) as P;
     case 3:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 4:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2092,6 +2121,51 @@ extension SeeGoalExperiencesQueryWhere
       ));
     });
   }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterWhereClause>
+      keywordsEqualTo(List<String> keywords) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'keywords',
+        value: [keywords],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterWhereClause>
+      keywordsNotEqualTo(List<String> keywords) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'keywords',
+              lower: [],
+              upper: [keywords],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'keywords',
+              lower: [keywords],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'keywords',
+              lower: [keywords],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'keywords',
+              lower: [],
+              upper: [keywords],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
 }
 
 extension SeeGoalExperiencesQueryFilter
@@ -2490,6 +2564,231 @@ extension SeeGoalExperiencesQueryFilter
   }
 
   QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'keywords',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'keywords',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'keywords',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'keywords',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'keywords',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'keywords',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'keywords',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'keywords',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'keywords',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'keywords',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'keywords',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'keywords',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'keywords',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'keywords',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'keywords',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
+      keywordsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'keywords',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QAfterFilterCondition>
       scoreEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -2680,6 +2979,13 @@ extension SeeGoalExperiencesQueryWhereDistinct
   }
 
   QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QDistinct>
+      distinctByKeywords() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'keywords');
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, SeeGoalExperiences, QDistinct>
       distinctByScore() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'score');
@@ -2712,6 +3018,13 @@ extension SeeGoalExperiencesQueryProperty
       insertTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'insertTime');
+    });
+  }
+
+  QueryBuilder<SeeGoalExperiences, List<String>, QQueryOperations>
+      keywordsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'keywords');
     });
   }
 
@@ -2763,29 +3076,34 @@ const SeeTaskSchema = CollectionSchema(
       name: r'insertTime',
       type: IsarType.dateTime,
     ),
-    r'parentMessageId': PropertySchema(
+    r'keyword': PropertySchema(
       id: 6,
+      name: r'keyword',
+      type: IsarType.string,
+    ),
+    r'parentMessageId': PropertySchema(
+      id: 7,
       name: r'parentMessageId',
       type: IsarType.string,
     ),
     r'score': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'score',
       type: IsarType.long,
     ),
     r'startTime': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'startTime',
       type: IsarType.dateTime,
     ),
     r'status': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'status',
       type: IsarType.byte,
       enumMap: _SeeTaskstatusEnumValueMap,
     ),
     r'taskDate': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'taskDate',
       type: IsarType.string,
     )
@@ -2822,6 +3140,19 @@ const SeeTaskSchema = CollectionSchema(
         )
       ],
     ),
+    r'keyword': IndexSchema(
+      id: 5840366397742622134,
+      name: r'keyword',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'keyword',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
     r'insertTime': IndexSchema(
       id: 4224881274084417522,
       name: r'insertTime',
@@ -2852,6 +3183,7 @@ int _seeTaskEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.description.length * 3;
   bytesCount += 3 + object.evaluation.length * 3;
+  bytesCount += 3 + object.keyword.length * 3;
   bytesCount += 3 + object.parentMessageId.length * 3;
   bytesCount += 3 + object.taskDate.length * 3;
   return bytesCount;
@@ -2869,11 +3201,12 @@ void _seeTaskSerialize(
   writer.writeString(offsets[3], object.evaluation);
   writer.writeLong(offsets[4], object.goalId);
   writer.writeDateTime(offsets[5], object.insertTime);
-  writer.writeString(offsets[6], object.parentMessageId);
-  writer.writeLong(offsets[7], object.score);
-  writer.writeDateTime(offsets[8], object.startTime);
-  writer.writeByte(offsets[9], object.status.index);
-  writer.writeString(offsets[10], object.taskDate);
+  writer.writeString(offsets[6], object.keyword);
+  writer.writeString(offsets[7], object.parentMessageId);
+  writer.writeLong(offsets[8], object.score);
+  writer.writeDateTime(offsets[9], object.startTime);
+  writer.writeByte(offsets[10], object.status.index);
+  writer.writeString(offsets[11], object.taskDate);
 }
 
 SeeTask _seeTaskDeserialize(
@@ -2890,13 +3223,14 @@ SeeTask _seeTaskDeserialize(
   object.goalId = reader.readLong(offsets[4]);
   object.id = id;
   object.insertTime = reader.readDateTime(offsets[5]);
-  object.parentMessageId = reader.readString(offsets[6]);
-  object.score = reader.readLong(offsets[7]);
-  object.startTime = reader.readDateTimeOrNull(offsets[8]);
+  object.keyword = reader.readString(offsets[6]);
+  object.parentMessageId = reader.readString(offsets[7]);
+  object.score = reader.readLong(offsets[8]);
+  object.startTime = reader.readDateTimeOrNull(offsets[9]);
   object.status =
-      _SeeTaskstatusValueEnumMap[reader.readByteOrNull(offsets[9])] ??
+      _SeeTaskstatusValueEnumMap[reader.readByteOrNull(offsets[10])] ??
           TaskStatus.pending;
-  object.taskDate = reader.readString(offsets[10]);
+  object.taskDate = reader.readString(offsets[11]);
   return object;
 }
 
@@ -2922,13 +3256,15 @@ P _seeTaskDeserializeProp<P>(
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 9:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 10:
       return (_SeeTaskstatusValueEnumMap[reader.readByteOrNull(offset)] ??
           TaskStatus.pending) as P;
-    case 10:
+    case 11:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3182,6 +3518,51 @@ extension SeeTaskQueryWhere on QueryBuilder<SeeTask, SeeTask, QWhereClause> {
               indexName: r'taskDate',
               lower: [],
               upper: [taskDate],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> keywordEqualTo(
+      String keyword) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'keyword',
+        value: [keyword],
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterWhereClause> keywordNotEqualTo(
+      String keyword) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'keyword',
+              lower: [],
+              upper: [keyword],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'keyword',
+              lower: [keyword],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'keyword',
+              lower: [keyword],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'keyword',
+              lower: [],
+              upper: [keyword],
               includeUpper: false,
             ));
       }
@@ -3825,6 +4206,136 @@ extension SeeTaskQueryFilter
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'keyword',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'keyword',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'keyword',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'keyword',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'keyword',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'keyword',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'keyword',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'keyword',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'keyword',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> keywordIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'keyword',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> parentMessageIdEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -4345,6 +4856,18 @@ extension SeeTaskQuerySortBy on QueryBuilder<SeeTask, SeeTask, QSortBy> {
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByKeyword() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'keyword', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByKeywordDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'keyword', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByParentMessageId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'parentMessageId', Sort.asc);
@@ -4493,6 +5016,18 @@ extension SeeTaskQuerySortThenBy
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByKeyword() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'keyword', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByKeywordDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'keyword', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByParentMessageId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'parentMessageId', Sort.asc);
@@ -4594,6 +5129,13 @@ extension SeeTaskQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByKeyword(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'keyword', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByParentMessageId(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -4670,6 +5212,12 @@ extension SeeTaskQueryProperty
   QueryBuilder<SeeTask, DateTime, QQueryOperations> insertTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'insertTime');
+    });
+  }
+
+  QueryBuilder<SeeTask, String, QQueryOperations> keywordProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'keyword');
     });
   }
 

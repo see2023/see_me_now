@@ -9,7 +9,7 @@ class RatingWidget extends StatefulWidget {
   SeeTask? task;
   SeeGoal? goal;
   final int maxRating;
-  final Function(int) onRatingSubmit;
+  final Function(int, String) onRatingSubmit;
   RatingWidget(
       {Key? key,
       this.goal,
@@ -24,6 +24,7 @@ class RatingWidget extends StatefulWidget {
 
 class _RatingWidgetState extends State<RatingWidget> {
   int rating = 0;
+  String evaluation = '';
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +91,16 @@ class _RatingWidgetState extends State<RatingWidget> {
                 ],
               ),
             ),
+            // TextField for evaluation text
+            TextField(
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: 'Evaluation'.tr,
+              ),
+              onChanged: (text) {
+                evaluation = text;
+              },
+            ),
             // score
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -113,7 +124,7 @@ class _RatingWidgetState extends State<RatingWidget> {
             // submit button
             IconButton(
               onPressed: () {
-                widget.onRatingSubmit(rating);
+                widget.onRatingSubmit(rating, evaluation);
                 Get.back();
               },
               icon: const Icon(Icons.done),

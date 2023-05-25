@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:get/get.dart';
 import 'package:see_me_now/api/chatgpt/chatgpt_proxy.dart';
 import 'package:see_me_now/data/db.dart';
@@ -49,7 +52,6 @@ class SeeMe {
   DateTime lastAIResponseTime =
       DateTime.now().subtract(const Duration(days: 1));
   String notifyAskewNickName = '';
-  String notifyAskewMessageId = '';
   String notifyAskewMessage = '';
   bool notifying = false;
 
@@ -109,12 +111,8 @@ The response content should be short and easy to understand and should not excee
 ''';
     promptText += DB.promptsMap[DB.firstPromptId]?.text ?? '';
     DB.chatGPTProxy
-        .sendMessage(
-            text,
-            parentMessageId,
-            DB.promptsMap[DB.firstPromptId]?.model ?? '',
-            promptText,
-            talkTime == 0)
+        .sendMessage(text, parentMessageId,
+            DB.promptsMap[DB.firstPromptId]?.model ?? '', promptText)
         .then((ChatGPTRes res) async {
       if (res.status == false) {
         Log.log.warning('got error response: ${res.text}');
@@ -130,11 +128,13 @@ The response content should be short and easy to understand and should not excee
   talk(String text,
       {String messageId = '', bool showTextInHome = false}) async {
     String fileId = messageId;
+    String voiceName = DB.promptsMap[DB.firstPromptId]?.voiceName ?? '';
     if (fileId.isEmpty) {
-      fileId = DB.uuid.v4();
+      // md5 text
+      fileId = md5.convert(utf8.encode(text + voiceName)).toString();
     }
-    var rt = await DB.azureProxy.textToWavAndVisemes(text, fileId,
-        thisVoiceName: DB.promptsMap[DB.firstPromptId]?.voiceName ?? '');
+    var rt = await DB.azureProxy
+        .textToWavAndVisemes(text, fileId, thisVoiceName: voiceName);
     if (rt.status) {
       Log.log.fine(
           'start sending visemes to webview, got ${rt.visemesText.length} visemes');
@@ -151,7 +151,6 @@ The response content should be short and easy to understand and should not excee
   checkNickName() {
     if (DB.setting.userNickname != notifyAskewNickName) {
       notifyAskewNickName = DB.setting.userNickname;
-      notifyAskewMessageId = DB.uuid.v4();
       notifyAskewMessage = 'Hi, $notifyAskewNickName, ${'SitStraight'.tr}';
     }
   }
@@ -192,7 +191,7 @@ Note that the content should be simple and clear, no more than 30 words.
           parentMessageId,
           DB.promptsMap[DB.firstPromptId]?.model ?? '',
           AgentPromts.gptPromptPrefix,
-          talkTime == 0);
+          temperature: 0.9);
       if (res.status == false) {
         Log.log.warning('notifyAskew got error response: ${res.text}');
       } else {
@@ -204,8 +203,7 @@ Note that the content should be simple and clear, no more than 30 words.
     } else {
       // do fixed content reminder
       Log.log.fine('notifyAskew, times: ${notifyAskewTimes.length}');
-      await talk(notifyAskewMessage,
-          messageId: notifyAskewMessageId, showTextInHome: true);
+      await talk(notifyAskewMessage, showTextInHome: true);
     }
     notifyAskewTimes.add(now);
     notifying = false;

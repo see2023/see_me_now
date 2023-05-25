@@ -17,6 +17,7 @@ class MyAction {
   static const int gptCost = 10;
   static const int searchCost = 1;
   static const int searchAndSummaryCost = 11;
+  double temperature = 0.5;
   SeeAction? act;
   Map<String, dynamic>? inputMap;
   String sysPromptText = '';
@@ -86,7 +87,7 @@ class MyAction {
             parentMessageId,
             DB.promptsMap[DB.firstPromptId]?.model ?? '',
             sysPromptText,
-            true);
+            temperature: temperature);
         if (res.status == false) {
           Log.log.warning('$i askGpt error: ${res.text}');
           return null;
@@ -161,6 +162,7 @@ class MyAction {
           // ));
           await showDialog(
             barrierColor: Colors.transparent,
+            barrierDismissible: false,
             context: Get.context!,
             builder: (_) => AskWidget(
                 tips: act!.input,

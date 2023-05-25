@@ -34,6 +34,7 @@ class _ChatListPageState extends State<ChatListPage>
                   onTap: () {
                     // show coming soon dialog...
                     showDialog(
+                      barrierDismissible: false,
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(

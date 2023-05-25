@@ -121,8 +121,10 @@ class Me {
               "${f.headEulerAngleX!.toStringAsFixed(0)} ${f.headEulerAngleY!.toStringAsFixed(0)} ${f.headEulerAngleZ!.toStringAsFixed(0)}";
         }
       }
+      String motion =
+          statList[dataIndex].status == MyStatus.upright ? '^_^' : 'o_o';
       MyApp.latestStat.currentStatus =
-          "^_^: ${(statList[dataIndex].isSmile * 100).toStringAsFixed(0)}, ${statList[dataIndex].status.index}: $angle";
+          "$motion: ${(statList[dataIndex].isSmile * 100).toStringAsFixed(0)}, ${statList[dataIndex].status.index}: $angle";
 
       MyApp.glbViewerStateKey.currentState!.sendMouthSmileMorphTargetInfluence(
           (statList[dataIndex].isSmile * 100).round());
@@ -155,16 +157,21 @@ class Me {
         MyApp.latestStat.nobodyCount = 0;
         MyApp.latestStat.uprightCount = 0;
         int times = MyApp.latestStat.askewCount ~/ statusChangeCount;
-        if (times % 30 == 0) {
-          final HomeController homeCon = Get.put(HomeController());
-          if (homeCon.isInSubWindowOrSubPage()) {
-            return;
-          }
-          if (DB.setting.enablePoseReminder) {
-            if (DB.setting.enableAIReplyFromCamera) {
-              defaultSpeaker.notifyAskew();
-            } else {
-              VoiceAssistant.notifyAskew();
+        if (times % 6 == 0) {
+          if (MyApp.goalManager.isNearProgressCheckTime()) {
+            MyApp.goalManager.setNeedRemindSitting(MyStatus.askew);
+            Log.log.fine('notifyAskew, near progress check time, skip');
+          } else {
+            final HomeController homeCon = Get.put(HomeController());
+            if (homeCon.isInSubWindowOrSubPage()) {
+              return;
+            }
+            if (DB.setting.enablePoseReminder) {
+              if (DB.setting.enableAIReplyFromCamera) {
+                defaultSpeaker.notifyAskew();
+              } else {
+                VoiceAssistant.notifyAskew();
+              }
             }
           }
         }
@@ -178,6 +185,7 @@ class Me {
       if (MyApp.latestStat.uprightCount % statusChangeCount == 0) {
         MyApp.latestStat.nobodyCount = 0;
         MyApp.latestStat.askewCount = 0;
+        MyApp.goalManager.setNeedRemindSitting(MyStatus.upright);
         if (DB.setting.enablePoseReminder) {
           // skip upright reminder because too frequent reminder is annoying
           // VoiceAssistant.notifyUpright(
@@ -191,6 +199,7 @@ class Me {
         MyApp.latestStat.status = MyStatus.nobody;
       }
       if (MyApp.latestStat.nobodyCount % statusChangeCount == 0) {
+        MyApp.goalManager.setNeedRemindSitting(MyStatus.nobody);
         MyApp.latestStat.askewCount = 0;
         MyApp.latestStat.uprightCount = 0;
       }

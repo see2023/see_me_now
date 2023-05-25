@@ -243,19 +243,18 @@ class DB {
     defaultPromptId = await setPrompt(0,
         name: 'Friend',
         text:
-            'I want you to act as my friend. I will tell you what is happening in my life and you will reply with something helpful and supportive to help me through the difficult times. Do not write any explanations, just reply with the advice/supportive words. My first request is: ',
+            'I want you to act as my friend. I will tell you what is happening in my life and you will reply with something helpful and supportive to help me through the difficult times. Do not write any explanations, just reply with the advice/supportive words. ',
         model: 'gpt-3.5-turbo',
         voiceName: 'zh-CN-XiaoyiNeural');
     await setPrompt(0,
         name: '辅导老师',
-        text:
-            '我是一名小学生，可能问你小学语文、数学、或英语问题，请用100字以内的句子回复我，内容通俗易懂，语句通顺，语法正确，不要出现错别字。我的第一个问题是：',
+        text: '我是一名小学生，可能问你小学语文、数学、或英语问题，请用100字以内的句子回复我，内容通俗易懂，语句通顺，语法正确，逻辑清晰。',
         model: 'gpt-3.5-turbo',
         voiceName: 'zh-CN-XiaomengNeural');
     await setPrompt(0,
         name: 'English teacher',
         text:
-            'I want you to act as a spoken English teacher and improver. I will speak to you in English or other langue, but you will reply to me in English to practice my spoken English. I want you to keep your reply neat, limiting the reply to 100 words. I want you to strictly correct my grammar mistakes, typos, and factual errors. My first sentence is: ',
+            'I want you to act as a spoken English teacher and improver. I will speak to you in English or other langue, but you will reply to me in English to practice my spoken English. I want you to keep your reply neat, limiting the reply to 100 words. I want you to strictly correct my grammar mistakes, typos, and factual errors.',
         model: 'gpt-3.5-turbo',
         voiceName: 'en-US-AriaNeural');
     await setPrompt(0,
@@ -267,7 +266,7 @@ class DB {
     await setPrompt(0,
         name: 'Math tearcher',
         text:
-            'I want you to act like a math teacher. I input mathematical expressions or mathematical problems,you first analyze the known conditions of the problem, then explain the idea of solving the problem, then explaining the solution approach, then calculating step by step, and finally outputting the final result. My first question is:',
+            'I want you to act like a math teacher. I input mathematical expressions or mathematical problems,you first analyze the known conditions of the problem, then explain the idea of solving the problem, then explaining the solution approach, then calculating step by step, and finally outputting the final result.',
         model: 'gpt-3.5-turbo',
         voiceName: 'zh-CN-YunhaoNeural');
     return defaultPromptId;

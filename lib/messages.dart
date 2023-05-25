@@ -28,6 +28,9 @@ class Messages extends Translations {
           'GoalExperience': 'Experience',
           'ReservedPrompt': 'Used by auto-reminder',
           'Language': 'Language',
+          'Animation': 'Animation',
+          'AIReplyWithMotion': 'AI Motion',
+          'Evaluation': 'Evaluation',
         },
         'zh_CN': {
           'askUserForTasks': '你今天有什么 @name 的计划吗?',
@@ -54,6 +57,9 @@ class Messages extends Translations {
           'GoalExperience': '经验',
           'ReservedPrompt': '自动提醒回复使用',
           'Language': '语言',
+          'Animation': '动画',
+          'AIReplyWithMotion': 'AI动作',
+          'Evaluation': '评价',
         },
       };
 }

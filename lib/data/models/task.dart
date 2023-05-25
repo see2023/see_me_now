@@ -67,6 +67,9 @@ class SeeGoalExperiences {
   @Index()
   int score = 0;
 
+  @Index()
+  List<String> keywords = [];
+
   List<String> experiences = [];
 }
 
@@ -84,6 +87,9 @@ class SeeTask {
   String taskDate = DateTime.now().toString().substring(0, 10);
 
   String description = '';
+
+  @Index()
+  String keyword = '';
 
   @enumerated
   TaskStatus status = TaskStatus.pending;

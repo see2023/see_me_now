@@ -17,6 +17,7 @@ class SettingKeyConstants {
   static const String userNickname = 'userNickname';
   static const String userDescription = 'userDescription';
   static const String userLanguage = 'userLanguage';
+  static const String enableAIReplyWithMotion = 'enableAIReplyWithMotion';
 }
 
 class Setting {
@@ -25,6 +26,7 @@ class Setting {
   bool enableCamera = true;
   bool enableAIReplyFromCamera = true;
   bool enablePoseReminder = true;
+  bool enableAIReplyWithMotion = false;
   String userNickname = '';
   String userDescription = '';
   String userLanguage = 'zh_CN';
@@ -50,6 +52,8 @@ class Setting {
         _settingsBox?.get(SettingKeyConstants.enableCamera) ?? true;
     DB.setting.enableAIReplyFromCamera =
         _settingsBox?.get(SettingKeyConstants.enableAIReplyFromCamera) ?? true;
+    DB.setting.enableAIReplyWithMotion =
+        _settingsBox?.get(SettingKeyConstants.enableAIReplyWithMotion) ?? false;
     DB.setting.enablePoseReminder =
         _settingsBox?.get(SettingKeyConstants.enablePoseReminder) ?? true;
     DB.setting.userNickname =
@@ -127,6 +131,11 @@ class Setting {
         DB.setting.userLanguage = value;
         _settingsBox?.put(
             SettingKeyConstants.userLanguage, DB.setting.userLanguage);
+        break;
+      case SettingKeyConstants.enableAIReplyWithMotion:
+        DB.setting.enableAIReplyWithMotion = value == 'true';
+        _settingsBox?.put(SettingKeyConstants.enableAIReplyWithMotion,
+            DB.setting.enableAIReplyWithMotion);
         break;
     }
   }

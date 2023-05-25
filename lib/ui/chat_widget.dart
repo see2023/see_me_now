@@ -205,41 +205,45 @@ class _ChatWidgetState extends State<ChatWidget> {
     _addMessage(textMessage);
 
     await processMessage(textMessage);
-    DB.chatGPTProxy
-        .sendMessage(
-            textMessage.text,
-            _apis[0].parentMessageId ?? '',
-            // _apis[0].model ?? '', // only one api now ...
-            DB.promptsMap[_promptIdUsed]?.model ?? '',
-            DB.promptsMap[_promptIdUsed]?.text ?? '',
-            firstMessage)
-        .then((ChatGPTRes res) {
-      Log.log.fine('got response: ${res.parentMessageId}');
-      final resMessage = types.TextMessage(
-        author: _users[_activeUser]!,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-        id: DB.uuid.v4(),
-        text: res.text,
-      );
-      if (!disposed) {
-        _addMessage(resMessage);
-      }
-      processMessage(resMessage,
-          parentMessageId: res.parentMessageId,
-          conversationId: res.conversationId,
-          speech: true);
-    });
+    ChatGPTResWithMotion? res;
+    if (DB.setting.enableAIReplyWithMotion) {
+      res = await DB.chatGPTProxy.sendMessgeRequiresMotion(
+          textMessage.text,
+          _apis[0].parentMessageId ?? '',
+          // _apis[0].model ?? '', // only one api now ...
+          DB.promptsMap[_promptIdUsed]?.model ?? '',
+          DB.promptsMap[_promptIdUsed]?.text ?? '');
+    } else {
+      ChatGPTRes resRaw = await DB.chatGPTProxy.sendMessage(
+          textMessage.text,
+          _apis[0].parentMessageId ?? '',
+          // _apis[0].model ?? '', // only one api now ...
+          DB.promptsMap[_promptIdUsed]?.model ?? '',
+          DB.promptsMap[_promptIdUsed]?.text ?? '');
+      res = ChatGPTResWithMotion()
+        ..status = resRaw.status
+        ..text = resRaw.text
+        ..parentMessageId = resRaw.parentMessageId;
+    }
+    Log.log
+        .fine('got response: ${res.parentMessageId}, motions: ${res.motions}');
+    final resMessage = types.TextMessage(
+      author: _users[_activeUser]!,
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+      id: DB.uuid.v4(),
+      text: res.text,
+    );
+    if (!disposed) {
+      _addMessage(resMessage);
+    }
+    processMessage(resMessage,
+        parentMessageId: res.parentMessageId, speech: true);
   }
 
   Future<int> processMessage(types.TextMessage message,
-      {String parentMessageId = '',
-      String conversationId = '',
-      bool speech = false}) async {
+      {String parentMessageId = '', bool speech = false}) async {
     if (parentMessageId.isNotEmpty) {
       _apis[0].parentMessageId = parentMessageId;
-    }
-    if (conversationId.isNotEmpty) {
-      _apis[0].conversationId = conversationId;
     }
     int ret = await DB.saveMessage(topicId, message, _apis,
         promptId: _promptIdUsed, topicName: _newTopicName);

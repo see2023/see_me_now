@@ -236,6 +236,25 @@ class _SettingWidgetState extends State<SettingWidget> {
                 ),
               ]),
           CardSettingsSection(
+            // 动画
+            header: CardSettingsHeader(
+              label: 'Animation'.tr,
+            ),
+            children: <CardSettingsWidget>[
+              CardSettingsSwitch(
+                key: const Key('AIReplyWithMotion'),
+                label: 'AIReplyWithMotion'.tr,
+                initialValue: DB.setting.enableAIReplyWithMotion,
+                onChanged: (value) {
+                  Log.log.fine('changing enableAIReplyWithMotion: $value');
+                  DB.setting.changeSetting(
+                      SettingKeyConstants.enableAIReplyWithMotion,
+                      value ? 'true' : 'false');
+                },
+              ),
+            ],
+          ),
+          CardSettingsSection(
             header: CardSettingsHeader(
               label: 'See Proxy',
             ),

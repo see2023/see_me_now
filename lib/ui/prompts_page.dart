@@ -100,6 +100,7 @@ class _PromptsPageState extends State<PromptsPage> {
                           icon: const Icon(Icons.restore),
                           onPressed: () {
                             showDialog(
+                                barrierDismissible: false,
                                 context: context,
                                 builder: (context) {
                                   return AlertDialog(
@@ -214,6 +215,7 @@ class _PromptsPageState extends State<PromptsPage> {
                                     icon: const Icon(Icons.delete),
                                     onPressed: () {
                                       showDialog(
+                                          barrierDismissible: false,
                                           context: context,
                                           builder: (context) {
                                             return AlertDialog(

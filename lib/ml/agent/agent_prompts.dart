@@ -38,8 +38,32 @@ Each time you will receive a JSON input, analyze the goal and current situation,
   }
 
   static String askForJson = '''
-Refer to the requested format, the output json is:
+Refer to the requested format, the entire output json is:
 ''';
+
+  static String askWithMotion = '''
+
+-----
+Refer to the requested format, the entire output json with reply,style and motions is:
+''';
+
+  static String askWithMotionFewShot = '''
+
+-----
+User - 'Good morning!'
+Assistant - '{"reply": "Good morning! Have a nice day!", "style":"Oration", "motions":"wave hands in front of chest | nodding as appropriate"}'
+-----
+User - '今天天气很不错，刚出去骑车了，好开心！'
+Assistant - '{"reply": "太好了!运动可有益健康了，坚持下去吧！", "style":"Happy", "motions":"Smiling widely | Jumping up and down | Clapping their hands | Spinning around"}'
+-----
+User - '摔跤了'
+Assistant - '{"reply": "哎呀，要小心啊！希望你赶快康复", "style":"Sad", "motions":"pacing back and forth in the room | looking around nervously"}'
+-----
+"style" could be one of [Agreement|Angry|Disagreement|Distracted|Flirty|Happy|Laughing|Oration|Neutral|Pensive|Relaxed|Sad|Sarcastic|Scared|Sneaky|Still|Threatening|Tired|Old]
+"motions" are the body movements that match the current reply and style.
+-----
+''';
+
   static Map<ActionType, String> agentPrompts = {
     ActionType.askGptForCreateTask: """$gptPromptPrefixJson
 ---Input---
@@ -51,10 +75,12 @@ as well as the experience summarized from historical tasks for the same goal: ex
 1) Fill in the json field "reason" with the reason why you return these tasks;
 2) "tasks" is the list of tasks you created after analysis, including task description and estimated time (in minutes),
  sorted by importance from front to back, and outputted in the required JSON format.
+3) "keyword": One of the most important keyword for this task, used to find experience from similar tasks. Each task has its own specific keyword.
 """,
     ActionType.askGptForNewExperience: """$gptPromptPrefixJson
 ---Input---
-This time, you will obtain the global state from the input JSON: goalState, having these fields:
+This time, you will obtain these fields from input JSON:
+goalState, having these fields:
   goalName,
   goalDescription, 
   An array of tasks: 
@@ -62,12 +88,14 @@ This time, you will obtain the global state from the input JSON: goalState, havi
     the estimated time: estimatedTimeInMinutes,
     the time spent: timeSpentInMinutes,
     the score given by the user himself for the completion of this task: score,
+    evaluation from user: evaluation,
   An other array of indexes from environment:
     Meaning of status values: stateName,
     the correlation values obtained from the external environment during the completion of the task: valueNow, 
     and the values of the same goal from the previous three days for comparison: valueBefore.
     positive = true here means that the higher score is better, vice versa.
 The experiences used to generate these tasks for this goal: experiencesUsed.
+conversations between user and AI: conversations,
 ---Output---
 1) Fill in the json field "reason" with the reason why you summarize these experiences;
 2) "experiences" is your fine-tuned experience for better results when creating subsequent tasks for the same goal.
@@ -82,15 +110,15 @@ This time, you will obtain these fields from input JSON:
   the estimated time of this task: estimatedTimeInMinutes,
   the time spent of this task: timeSpentInMinutes,
   the experiences used to generate this task for this goal: experiencesUsed,
-  conversations between user and AI: conversations,
-  other conversations between user and AI: minorConversations, (answer is cut off, no supplement required),
+  conversations between user and AI: conversations: conversations, you need to avoid repetitive questions based on these conversations and give top-down, logical reminders,
+  some other conversations between user and AI: minorConversations, (answer is cut off, no supplement required),
   an array of indexes from environment: envStates, including:
     meaning of status values: stateName,
     the correlation values obtained from the external environment during the completion of the task: valueNow, 
     and the values of the same goal from the previous three days for comparison: valueBefore,
     positive = true here means that the higher score is better, vice versa.
 ---Output---
-0) Fill in the json field "reason" with the reason why you chose this action;
+0) Fill in the json field "reason" with the reason why you chose this action from a wide selection, to continue step-by-step communication;
 1) You can ask the user about his real progress and other information that will help you to judge with: {"act":"needMoreInfo", "reason":"...", "text":"..."};
 or 2) Propose a small quiz with answers to help users review and deepen their understanding: {"act":"quiz", "reason":"...", "question":"...", "answer":"..."};
 or 3) Your knowledge is only available until September 2021, the current time is 2023, so when you encounter any time-sensitive content(News, IT Technologies ..); 

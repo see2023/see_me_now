@@ -52,6 +52,15 @@ class GoalStateIndex {
       'positive': positive,
     });
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'stateName': stateName,
+      'valueNow': valueNow,
+      'valueBefore': valueBefore,
+      'positive': positive,
+    };
+  }
 }
 
 class TaskScore {
@@ -70,6 +79,16 @@ class TaskScore {
       'evaluation': evaluation,
     });
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'taskDescription': taskDescription,
+      'estimatedTimeInMinutes': estimatedTimeInMinutes,
+      'timeSpentInMinutes': timeSpentInMinutes,
+      'score': score,
+      'evaluation': evaluation,
+    };
+  }
 }
 
 class GoalState {
@@ -85,6 +104,15 @@ class GoalState {
       'taskScores': taskScores.map((e) => e.toString()).toList(),
       'envStates': envStates.map((e) => e.toString()).toList(),
     });
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'goalName': goalName,
+      'goalDescription': goalDescription,
+      'taskScores': taskScores,
+      'envStates': envStates,
+    };
   }
 }
 
@@ -629,7 +657,7 @@ class AgentData {
     List<Conversation> tips = await DB.isar?.conversations
             .where()
             .goalIdEqualTo(goalId)
-            .sortByInsertTime()
+            .sortByInsertTimeDesc()
             .limit(num)
             .findAll() ??
         [];
@@ -638,6 +666,8 @@ class AgentData {
     for (Conversation tip in tips) {
       texts.add('${tip.from}: ${tip.text}');
     }
+    //reverse
+    texts = texts.reversed.toList();
     return texts;
   }
 }

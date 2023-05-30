@@ -4,6 +4,7 @@ import 'package:isar/isar.dart';
 import 'package:see_me_now/data/db.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:see_me_now/main.dart';
+import 'package:see_me_now/ui/autoback_home.dart';
 import 'package:see_me_now/ui/chat_list_page.dart';
 import 'package:see_me_now/ui/chat_widget.dart';
 
@@ -43,6 +44,8 @@ class HomeController extends GetxController {
     MyApp.refreshHome();
     // update();
   }
+
+  bool isOpacity = true;
 }
 
 class HomePage extends StatefulWidget {
@@ -61,6 +64,7 @@ class HomePageState extends State<HomePage>
   String appBarTitle = DB.getDefaultPromptName();
   float chatOpacity = 0.8;
   void changeOpacity(bool isOpacity) {
+    c.isOpacity = isOpacity;
     chatOpacity = isOpacity ? 0.8 : 0.3;
     setState(() {});
   }
@@ -170,7 +174,9 @@ class HomePageState extends State<HomePage>
                       opacity: chatOpacity,
                       child: controller.topicId < 0
                           ? const ExtensibleTopicList()
-                          : ChatWidget(chatId: controller.topicId),
+                          : AutoBackHome(
+                              key: UniqueKey(),
+                              child: ChatWidget(chatId: controller.topicId)),
                     ),
               // show reminderTxt
               Positioned(

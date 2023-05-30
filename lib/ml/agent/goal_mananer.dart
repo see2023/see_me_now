@@ -14,6 +14,7 @@ import 'package:see_me_now/ml/me.dart';
 import 'package:see_me_now/tools/string_tools.dart';
 import 'package:see_me_now/ui/agent/goal_widget.dart';
 import 'package:see_me_now/ui/agent/txt_show_widget.dart';
+import 'package:see_me_now/ui/autoback_home.dart';
 import 'package:see_me_now/ui/home_page.dart';
 
 class GoalManager extends GetxController {
@@ -94,12 +95,15 @@ class GoalManager extends GetxController {
       barrierColor: Colors.transparent,
       barrierDismissible: false,
       context: Get.context!,
-      builder: (_) => GoalWidget(
-        orderedGoals: agentData.orderedGoals,
-        goalsMap: agentData.goalsMap,
-        tasksMap: agentData.tasksMap,
-        changeTaskStatus: updateTaskStatus,
-        onAddNewTask: onAddNewTask,
+      builder: (_) => AutoBackHome(
+        key: const Key('goal_widget'),
+        child: GoalWidget(
+          orderedGoals: agentData.orderedGoals,
+          goalsMap: agentData.goalsMap,
+          tasksMap: agentData.tasksMap,
+          changeTaskStatus: updateTaskStatus,
+          onAddNewTask: onAddNewTask,
+        ),
       ),
     );
 
@@ -430,21 +434,17 @@ Note that this refers to specific tasks, not experiences.
     List<String> experiencesUsed = await agentData.getExperience(goal.id);
     // ask gpt for new experience
     Map<String, dynamic> inputMap = {
-      'goalState': goalState.toString(),
+      'goalState': goalState,
       'conversations': conversations,
       'experienceUsed': experiencesUsed,
-      'constraints': '''
+      'constraints': """
 Please reply an array containing similar experience after optimization;
 Every experience should be short, less than 100 words;
-''',
-      'outputJsonFormat': '''
-{
-  "reason": "...",
-  "experiences":[
-    "experience 1", "experience 2", "experience 3"
-  ]
-}
-''',
+""",
+      'outputJsonFormat': {
+        "reason": "...",
+        "experiences": ["experience 1", "experience 2", "experience 3"]
+      },
     };
     MyAction action = MyAction(
         goal.id, 0, ActionType.askGptForNewExperience, '',
@@ -651,7 +651,7 @@ Every experience should be short, less than 100 words;
       'conversations': conversations,
       'minorConversations': questions,
       'experienceUsed': experiencesUsed,
-      'envStates': goalState.envStates.map((e) => e.toString()).toList(),
+      'envStates': goalState.envStates,
       'outputJsonFormat': reactions,
       'constraints':
           '''The answer should be brief and output like outputJsonFormat with required "act".
@@ -810,9 +810,12 @@ Every experience should be short, less than 100 words;
         barrierColor: Colors.transparent,
         barrierDismissible: false,
         context: Get.context!,
-        builder: (_) => QuizWidget(
-          question: question,
-          answer: answer,
+        builder: (_) => AutoBackHome(
+          key: UniqueKey(),
+          child: QuizWidget(
+            question: question,
+            answer: answer,
+          ),
         ),
       );
     } else {
@@ -820,7 +823,8 @@ Every experience should be short, less than 100 words;
         barrierColor: Colors.transparent,
         barrierDismissible: false,
         context: Get.context!,
-        builder: (_) => TxtShowWidget(text: text),
+        builder: (_) =>
+            AutoBackHome(key: UniqueKey(), child: TxtShowWidget(text: text)),
       );
     }
     homeCon.setInSubWindow(false);

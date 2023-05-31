@@ -11,7 +11,7 @@ class AutoBackHome extends StatefulWidget {
   const AutoBackHome(
       {required Key key,
       required this.child,
-      this.duration = const Duration(minutes: 1)})
+      this.duration = const Duration(minutes: 2)})
       : super(key: key);
 
   @override
@@ -43,9 +43,8 @@ class _AutoBackHomeState extends State<AutoBackHome>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
+    return Listener(
+      onPointerDown: (_) {
         Log.log.fine('AutoBackHome: onTap');
         _lastInputTime = DateTime.now();
       },

@@ -27,6 +27,7 @@ class GoalManager extends GetxController {
 
   late Timer _timer;
   bool running = false;
+  bool autoStartNextTask = false;
   DateTime lastRunTime = DateTime.now();
   AgentData agentData = AgentData();
   final HomeController homeCon = Get.put(HomeController());
@@ -81,7 +82,7 @@ class GoalManager extends GetxController {
     await checkGoals();
   }
 
-  updateTaskStatus(int taskId, TaskStatus status,
+  Future<void> updateTaskStatus(int taskId, TaskStatus status,
       {int score = 0, String evaluation = ''}) async {
     await agentData.updateTask(taskId, status,
         score: score, evaluation: evaluation);
@@ -206,8 +207,9 @@ class GoalManager extends GetxController {
         agentData.runningGoalId = goal.id;
       }
     }
-    if (agentData.runningTaskId == 0) {
+    if (agentData.runningTaskId == 0 && autoStartNextTask) {
       agentData.runningTaskId = await reorderAndStartFirstTasks();
+      autoStartNextTask = false;
     }
     return simpleGoals.length;
   }
@@ -231,7 +233,10 @@ class GoalManager extends GetxController {
       ..name = goal.name
       ..priority = goal.priority
       ..tasks = newTasks;
-    await confirmNewTasks(tempGoal);
+    int rt = await confirmNewTasks(tempGoal);
+    if (rt > 0) {
+      autoStartNextTask = true;
+    }
     return tempGoal.tasks;
   }
 
@@ -250,7 +255,9 @@ class GoalManager extends GetxController {
     if (showAvatar) {
       Me.defaultSpeaker.talk(inputText);
     }
-    homeCon.setInSubWindow(true);
+    await homeCon.setInSubWindow(true);
+    // sleep 1 second to wait for the sub window to be ready
+    await Future.delayed(const Duration(seconds: 1));
     await action.excute();
     homeCon.setInSubWindow(false);
     Log.log
@@ -328,8 +335,11 @@ Note that this refers to specific tasks, not experiences.
     });
   }
 
-  Future<bool> confirmNewTasks(GoalInfo goal) async {
-    homeCon.setInSubWindow(true);
+  Future<int> confirmNewTasks(GoalInfo goal) async {
+    if (goal.tasks == null || goal.tasks!.isEmpty) {
+      return -1;
+    }
+    await homeCon.setInSubWindow(true);
     bool rt = false;
     await showDialog(
         barrierColor: Colors.transparent,
@@ -351,7 +361,7 @@ Note that this refers to specific tasks, not experiences.
     }
     Log.log.info('confirmNewTasks result: $rt');
     agentData.updateGoal(goal.goalId);
-    return rt;
+    return rt == false ? -1 : goal.tasks!.length;
   }
 
   Future<int> reorderAndStartFirstTasks() async {
@@ -804,7 +814,7 @@ Every experience should be short, less than 100 words;
     if (goalId > 0 && taskId > 0) {
       await agentData.saveConversation(goalId, taskId, text);
     }
-    homeCon.setInSubWindow(true);
+    await homeCon.setInSubWindow(true);
     if (isQuiz) {
       await showDialog(
         barrierColor: Colors.transparent,

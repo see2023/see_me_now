@@ -35,8 +35,15 @@ class VoiceAssistant {
 
   static void setListener() {
     player.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
-        MyApp.homePageStateKey.currentState!.changeOpacity(true);
+      Log.log.fine('player state: $state');
+      if (state.processingState == ProcessingState.completed ||
+          (playing && state.processingState == ProcessingState.idle)) {
+        if (state.processingState == ProcessingState.completed) {
+          MyApp.homePageStateKey.currentState!.changeOpacity(true);
+        } else {
+          MyApp.homePageStateKey.currentState!
+              .changeOpacity(true, refresh: false);
+        }
       }
     });
   }

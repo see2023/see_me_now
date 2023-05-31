@@ -17,10 +17,24 @@ class HomeController extends GetxController {
   }
 
   bool inSubWindow = false;
-  void setInSubWindow(bool value) {
-    inSubWindow = value;
+  Future<void> setInSubWindow(bool value) async {
     Log.log.fine('in HomeController, inSubWindow changed to $value');
-    MyApp.refreshHome();
+    if (value == true && isInSubWindowOrSubPage()) {
+      // go back to home page
+      if (inSubWindow || Get.currentRoute != '/home') {
+        Get.back();
+      } else if (topicId >= 0) {
+        setTopicId(-1);
+      }
+    } else {
+      MyApp.refreshHome();
+    }
+    if (value == true) {
+      // delay some frames to set inSubWindow to true
+      await Future.delayed(Duration.zero);
+      await Future.delayed(Duration.zero);
+    }
+    inSubWindow = value;
   }
 
   int topicId = -1;
@@ -63,10 +77,12 @@ class HomePageState extends State<HomePage>
   final HomeController c = Get.put(HomeController());
   String appBarTitle = DB.getDefaultPromptName();
   float chatOpacity = 0.8;
-  void changeOpacity(bool isOpacity) {
+  void changeOpacity(bool isOpacity, {bool refresh = true}) {
     c.isOpacity = isOpacity;
     chatOpacity = isOpacity ? 0.8 : 0.3;
-    setState(() {});
+    if (refresh) {
+      setState(() {});
+    }
   }
 
   void changeTitle(String title, {bool refresh = true}) {
@@ -103,7 +119,8 @@ class HomePageState extends State<HomePage>
               padding: const EdgeInsets.only(right: 20.0),
               child: GestureDetector(
                 onTap: () async {
-                  c.setInSubWindow(true);
+                  await c.setInSubWindow(true);
+                  setState(() {});
                   await MyApp.goalManager.showGoalsAndTasks();
                   c.setInSubWindow(false);
                 },

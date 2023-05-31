@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:see_me_now/data/db_tools.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:see_me_now/data/models/task.dart';
 import 'package:see_me_now/ml/agent/agent_data.dart';
@@ -221,8 +222,7 @@ class _ProgressWidgetState extends State<ProgressWidget> {
     }
     int actualTimeInMinutes = 0;
     if (widget.task?.startTime != null) {
-      actualTimeInMinutes =
-          DateTime.now().difference(widget.task!.startTime!).inMinutes;
+      actualTimeInMinutes = getTimeSpentInMinutes(widget.task!);
     }
     return Text(
       '${actualTimeInMinutes.toString()} / ${estimatedTimeInMinutes.toString()}',
@@ -249,7 +249,9 @@ class GoalWidget extends StatefulWidget {
   List<int>? orderedGoals = [];
   Map<int, SeeGoal>? goalsMap;
   Map<int, SeeTask>? tasksMap;
-  Function(int, TaskStatus, {int score, String evaluation})? changeTaskStatus;
+  // async Funcion
+  Future<void> Function(int, TaskStatus, {int score, String evaluation})?
+      changeTaskStatus;
   Function(int)? onAddNewTask;
   GoalWidget(
       {Key? key,
@@ -349,6 +351,7 @@ class _GoalWidgetState extends State<GoalWidget> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              // show text of task
                               Expanded(
                                 flex: 5,
                                 child: Text(
@@ -364,17 +367,16 @@ class _GoalWidgetState extends State<GoalWidget> {
                                   softWrap: true,
                                 ),
                               ),
+
+                              // show progress of task
                               Expanded(
                                 flex: 1,
                                 child: ProgressWidget(
                                   task: task,
                                 ),
-                                // child: Text(
-                                //   task.estimatedTimeInMinutes.toString(),
-                                //   textAlign: TextAlign.center,
-                                //   softWrap: true,
-                                // ),
                               ),
+
+                              // show cancel|suspend button
                               task.status == TaskStatus.done
                                   ? const Opacity(
                                       opacity: 0.5,
@@ -383,7 +385,8 @@ class _GoalWidgetState extends State<GoalWidget> {
                                         child: Icon(Icons.gpp_good),
                                       ),
                                     )
-                                  : task.status == TaskStatus.cancelled
+                                  : task.status == TaskStatus.cancelled ||
+                                          task.status == TaskStatus.failed
                                       ? const Opacity(
                                           opacity: 0.5,
                                           child: Expanded(
@@ -391,24 +394,73 @@ class _GoalWidgetState extends State<GoalWidget> {
                                             child: Icon(Icons.delete),
                                           ),
                                         )
-                                      : Expanded(
-                                          flex: 1,
-                                          child: IconButton(
-                                            alignment: Alignment.centerRight,
-                                            onPressed: () {
-                                              widget.changeTaskStatus?.call(
-                                                  task.id,
-                                                  TaskStatus.cancelled);
-                                              setState(() {
-                                                task.status =
-                                                    TaskStatus.cancelled;
-                                              });
-                                            },
-                                            icon: const Icon(
-                                                Icons.cancel_outlined),
-                                          ),
-                                        ),
-                              notFinished
+                                      : task.status == TaskStatus.running
+                                          ?
+                                          // show suspend button
+                                          Expanded(
+                                              flex: 1,
+                                              child: IconButton(
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                onPressed: () async {
+                                                  await widget.changeTaskStatus
+                                                      ?.call(task.id,
+                                                          TaskStatus.suspended);
+                                                  setState(() {});
+                                                },
+                                                icon: const Icon(Icons.stop),
+                                              ),
+                                            )
+                                          // show cancel button
+                                          : Expanded(
+                                              flex: 1,
+                                              child: IconButton(
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                onPressed: () {
+                                                  // show confirm cancel dialog
+                                                  showDialog(
+                                                    barrierDismissible: false,
+                                                    context: context,
+                                                    builder: (context) =>
+                                                        AlertDialog(
+                                                      title: const Text(
+                                                          'Cancel task'),
+                                                      content: const Text(
+                                                          'Are you sure you want to cancel this task?'),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Get.back();
+                                                          },
+                                                          child:
+                                                              const Text('No'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () async {
+                                                            await widget
+                                                                .changeTaskStatus
+                                                                ?.call(
+                                                                    task.id,
+                                                                    TaskStatus
+                                                                        .cancelled);
+                                                            setState(() {});
+                                                            Get.back();
+                                                          },
+                                                          child:
+                                                              const Text('Yes'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                                icon: const Icon(
+                                                    Icons.cancel_outlined),
+                                              ),
+                                            ),
+
+                              // show finish|continue button
+                              task.status == TaskStatus.running
                                   ? Expanded(
                                       flex: 1,
                                       child: IconButton(
@@ -419,11 +471,12 @@ class _GoalWidgetState extends State<GoalWidget> {
                                             goal: goal,
                                             task: task,
                                             onRatingSubmit: (int rating,
-                                                String evaluation) {
-                                              widget.changeTaskStatus?.call(
-                                                  task.id, TaskStatus.done,
-                                                  score: rating,
-                                                  evaluation: evaluation);
+                                                String evaluation) async {
+                                              await widget.changeTaskStatus
+                                                  ?.call(
+                                                      task.id, TaskStatus.done,
+                                                      score: rating,
+                                                      evaluation: evaluation);
                                               setState(() {
                                                 task.status = TaskStatus.done;
                                               });
@@ -433,7 +486,22 @@ class _GoalWidgetState extends State<GoalWidget> {
                                         icon: const Icon(Icons.done),
                                       ),
                                     )
-                                  : Expanded(flex: 1, child: Container()),
+                                  : task.status == TaskStatus.pending ||
+                                          task.status == TaskStatus.suspended
+                                      ? // show continue button
+                                      Expanded(
+                                          flex: 1,
+                                          child: IconButton(
+                                            alignment: Alignment.centerRight,
+                                            onPressed: () {
+                                              widget.changeTaskStatus?.call(
+                                                  task.id, TaskStatus.running);
+                                              setState(() {});
+                                            },
+                                            icon: const Icon(Icons.play_arrow),
+                                          ),
+                                        )
+                                      : Expanded(flex: 1, child: Container()),
                             ],
                           ),
                         );

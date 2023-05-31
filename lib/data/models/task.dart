@@ -99,6 +99,7 @@ class SeeTask {
   DateTime? startTime;
   DateTime? endTime;
   int estimatedTimeInMinutes = 0;
+  int? consumedSeconds;
 
   @enumerated
   String evaluation = '';

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:see_me_now/data/constants.dart';
 import 'package:see_me_now/data/db.dart';
+import 'package:see_me_now/data/db_tools.dart';
 import 'package:see_me_now/data/log.dart';
 import 'package:see_me_now/data/models/message.dart';
 import 'package:see_me_now/data/models/task.dart';
@@ -292,6 +293,14 @@ class AgentData {
       return;
     }
     await DB.isar?.writeTxn(() async {
+      DateTime now = DateTime.now();
+      if (task.status == TaskStatus.running &&
+          status != TaskStatus.running &&
+          task.startTime != null) {
+        task.consumedSeconds ??= 0;
+        task.consumedSeconds =
+            task.consumedSeconds! + now.difference(task.startTime!).inSeconds;
+      }
       if (status == TaskStatus.running) {
         task.startTime = DateTime.now();
       } else {
@@ -302,30 +311,33 @@ class AgentData {
       if (evaluation != '') task.evaluation = evaluation;
       if (status == TaskStatus.done ||
           status == TaskStatus.cancelled ||
-          status == TaskStatus.failed) {
-        task.endTime = DateTime.now();
+          status == TaskStatus.failed ||
+          status == TaskStatus.suspended) {
+        task.endTime = now;
         if (runningTaskId == taskId) {
           runningTaskId = 0;
-          runningAction = false;
         }
-        // check if goal is done
         SeeGoal? goal = goalsMap[task.goalId];
         if (goal != null) {
-          bool isDone = true;
-          for (int taskId in goal.tasks) {
-            SeeTask? task = tasksMap[taskId];
-            if (task == null ||
-                (task.status != TaskStatus.done &&
-                    task.status != TaskStatus.cancelled &&
-                    task.status != TaskStatus.failed)) {
-              isDone = false;
-              break;
-            }
+          if (runningGoalId == goal.id) {
+            runningGoalId = 0;
           }
-          if (isDone) {
-            if (runningGoalId == goal.id) {
-              runningGoalId = 0;
-            }
+        }
+      } else if (status == TaskStatus.running) {
+        runningTaskId = taskId;
+        runningGoalId = task.goalId;
+        // change other running tasks to suspended if exists ?
+        for (int taskId2 in tasksMap.keys) {
+          SeeTask? task2 = tasksMap[taskId2];
+          if (task2 != null &&
+              task2.status == TaskStatus.running &&
+              taskId2 != taskId) {
+            task2.status = TaskStatus.suspended;
+            task2.endTime = now;
+            task2.consumedSeconds ??= 0;
+            task2.consumedSeconds = task2.consumedSeconds! +
+                now.difference(task2.startTime!).inSeconds;
+            await DB.isar?.seeTasks.put(task2);
           }
         }
       }
@@ -481,14 +493,6 @@ class AgentData {
             .findAll() ??
         [];
     return tasks;
-  }
-
-  int getTimeSpentInMinutes(SeeTask task) {
-    if (task.startTime == null) {
-      return 0;
-    }
-    DateTime endTime = task.endTime ?? DateTime.now();
-    return endTime.difference(task.startTime!).inMinutes;
   }
 
   double getTimeSpentRatio(SeeTask task) {

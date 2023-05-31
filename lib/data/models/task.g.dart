@@ -3046,64 +3046,69 @@ const SeeTaskSchema = CollectionSchema(
   name: r'SeeTask',
   id: -3392477825759854955,
   properties: {
-    r'description': PropertySchema(
+    r'consumedSeconds': PropertySchema(
       id: 0,
+      name: r'consumedSeconds',
+      type: IsarType.long,
+    ),
+    r'description': PropertySchema(
+      id: 1,
       name: r'description',
       type: IsarType.string,
     ),
     r'endTime': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'endTime',
       type: IsarType.dateTime,
     ),
     r'estimatedTimeInMinutes': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'estimatedTimeInMinutes',
       type: IsarType.long,
     ),
     r'evaluation': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'evaluation',
       type: IsarType.string,
     ),
     r'goalId': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'goalId',
       type: IsarType.long,
     ),
     r'insertTime': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'insertTime',
       type: IsarType.dateTime,
     ),
     r'keyword': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'keyword',
       type: IsarType.string,
     ),
     r'parentMessageId': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'parentMessageId',
       type: IsarType.string,
     ),
     r'score': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'score',
       type: IsarType.long,
     ),
     r'startTime': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'startTime',
       type: IsarType.dateTime,
     ),
     r'status': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'status',
       type: IsarType.byte,
       enumMap: _SeeTaskstatusEnumValueMap,
     ),
     r'taskDate': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'taskDate',
       type: IsarType.string,
     )
@@ -3195,18 +3200,19 @@ void _seeTaskSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.description);
-  writer.writeDateTime(offsets[1], object.endTime);
-  writer.writeLong(offsets[2], object.estimatedTimeInMinutes);
-  writer.writeString(offsets[3], object.evaluation);
-  writer.writeLong(offsets[4], object.goalId);
-  writer.writeDateTime(offsets[5], object.insertTime);
-  writer.writeString(offsets[6], object.keyword);
-  writer.writeString(offsets[7], object.parentMessageId);
-  writer.writeLong(offsets[8], object.score);
-  writer.writeDateTime(offsets[9], object.startTime);
-  writer.writeByte(offsets[10], object.status.index);
-  writer.writeString(offsets[11], object.taskDate);
+  writer.writeLong(offsets[0], object.consumedSeconds);
+  writer.writeString(offsets[1], object.description);
+  writer.writeDateTime(offsets[2], object.endTime);
+  writer.writeLong(offsets[3], object.estimatedTimeInMinutes);
+  writer.writeString(offsets[4], object.evaluation);
+  writer.writeLong(offsets[5], object.goalId);
+  writer.writeDateTime(offsets[6], object.insertTime);
+  writer.writeString(offsets[7], object.keyword);
+  writer.writeString(offsets[8], object.parentMessageId);
+  writer.writeLong(offsets[9], object.score);
+  writer.writeDateTime(offsets[10], object.startTime);
+  writer.writeByte(offsets[11], object.status.index);
+  writer.writeString(offsets[12], object.taskDate);
 }
 
 SeeTask _seeTaskDeserialize(
@@ -3216,21 +3222,22 @@ SeeTask _seeTaskDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = SeeTask();
-  object.description = reader.readString(offsets[0]);
-  object.endTime = reader.readDateTimeOrNull(offsets[1]);
-  object.estimatedTimeInMinutes = reader.readLong(offsets[2]);
-  object.evaluation = reader.readString(offsets[3]);
-  object.goalId = reader.readLong(offsets[4]);
+  object.consumedSeconds = reader.readLongOrNull(offsets[0]);
+  object.description = reader.readString(offsets[1]);
+  object.endTime = reader.readDateTimeOrNull(offsets[2]);
+  object.estimatedTimeInMinutes = reader.readLong(offsets[3]);
+  object.evaluation = reader.readString(offsets[4]);
+  object.goalId = reader.readLong(offsets[5]);
   object.id = id;
-  object.insertTime = reader.readDateTime(offsets[5]);
-  object.keyword = reader.readString(offsets[6]);
-  object.parentMessageId = reader.readString(offsets[7]);
-  object.score = reader.readLong(offsets[8]);
-  object.startTime = reader.readDateTimeOrNull(offsets[9]);
+  object.insertTime = reader.readDateTime(offsets[6]);
+  object.keyword = reader.readString(offsets[7]);
+  object.parentMessageId = reader.readString(offsets[8]);
+  object.score = reader.readLong(offsets[9]);
+  object.startTime = reader.readDateTimeOrNull(offsets[10]);
   object.status =
-      _SeeTaskstatusValueEnumMap[reader.readByteOrNull(offsets[10])] ??
+      _SeeTaskstatusValueEnumMap[reader.readByteOrNull(offsets[11])] ??
           TaskStatus.pending;
-  object.taskDate = reader.readString(offsets[11]);
+  object.taskDate = reader.readString(offsets[12]);
   return object;
 }
 
@@ -3242,29 +3249,31 @@ P _seeTaskDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 1:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
-    case 4:
       return (reader.readLong(offset)) as P;
-    case 5:
-      return (reader.readDateTime(offset)) as P;
-    case 6:
+    case 4:
       return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readLong(offset)) as P;
+    case 6:
+      return (reader.readDateTime(offset)) as P;
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 9:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 10:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 11:
       return (_SeeTaskstatusValueEnumMap[reader.readByteOrNull(offset)] ??
           TaskStatus.pending) as P;
-    case 11:
+    case 12:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3662,6 +3671,78 @@ extension SeeTaskQueryWhere on QueryBuilder<SeeTask, SeeTask, QWhereClause> {
 
 extension SeeTaskQueryFilter
     on QueryBuilder<SeeTask, SeeTask, QFilterCondition> {
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
+      consumedSecondsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'consumedSeconds',
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
+      consumedSecondsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'consumedSeconds',
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> consumedSecondsEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'consumedSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition>
+      consumedSecondsGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'consumedSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> consumedSecondsLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'consumedSeconds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> consumedSecondsBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'consumedSeconds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterFilterCondition> descriptionEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -4783,6 +4864,18 @@ extension SeeTaskQueryLinks
     on QueryBuilder<SeeTask, SeeTask, QFilterCondition> {}
 
 extension SeeTaskQuerySortBy on QueryBuilder<SeeTask, SeeTask, QSortBy> {
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByConsumedSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'consumedSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByConsumedSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'consumedSeconds', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> sortByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -4931,6 +5024,18 @@ extension SeeTaskQuerySortBy on QueryBuilder<SeeTask, SeeTask, QSortBy> {
 
 extension SeeTaskQuerySortThenBy
     on QueryBuilder<SeeTask, SeeTask, QSortThenBy> {
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByConsumedSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'consumedSeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByConsumedSecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'consumedSeconds', Sort.desc);
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QAfterSortBy> thenByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -5091,6 +5196,12 @@ extension SeeTaskQuerySortThenBy
 
 extension SeeTaskQueryWhereDistinct
     on QueryBuilder<SeeTask, SeeTask, QDistinct> {
+  QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByConsumedSeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'consumedSeconds');
+    });
+  }
+
   QueryBuilder<SeeTask, SeeTask, QDistinct> distinctByDescription(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -5175,6 +5286,12 @@ extension SeeTaskQueryProperty
   QueryBuilder<SeeTask, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<SeeTask, int?, QQueryOperations> consumedSecondsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'consumedSeconds');
     });
   }
 

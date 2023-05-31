@@ -37,14 +37,16 @@ Each time you will receive a JSON input, analyze the goal and current situation,
     }
   }
 
+// Refer to the requested format, the output json starting with a curly brace is:
   static String askForJson = """
-Refer to the requested format, the output json starting with a curly brace is:
+Refer to the requested format, the entire response in the json is:
 """;
 
+// Refer to the requested format, the output json starting with a curly brace and containing reply,style and motions is:
   static String askWithMotion = """
 
 -----
-Refer to the requested format, the output json starting with a curly brace and containing reply,style and motions is:
+Refer to the requested format, the entire response in the json containing reply,style and motions is:
 """;
 
   static String askWithMotionFewShot = '''

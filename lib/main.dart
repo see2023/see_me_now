@@ -16,6 +16,7 @@ import 'package:see_me_now/ui/prompts_page.dart';
 import 'package:see_me_now/ui/setting_page.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:wakelock/wakelock.dart';
 
 // APP
 class MyApp extends StatefulWidget {
@@ -110,6 +111,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Wakelock.enable();
   Log.setLevel(Level.FINE);
   await DB.init();
   if (DB.isRelease) {

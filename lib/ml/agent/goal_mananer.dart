@@ -28,7 +28,9 @@ class GoalManager extends GetxController {
   late Timer _timer;
   bool running = false;
   bool autoStartNextTask = false;
-  DateTime lastRunTime = DateTime.now();
+  DateTime lastRunTime = DateTime.now().subtract(const Duration(minutes: 1));
+  int maxReviewQuizCount = 10;
+  int reviewQuizCount = 0;
   AgentData agentData = AgentData();
   final HomeController homeCon = Get.put(HomeController());
 
@@ -37,24 +39,30 @@ class GoalManager extends GetxController {
     int goalCount = DB.isar?.seeGoals.where().countSync() ?? 0;
     if (goalCount == 0) {
       AgentData.setInitGoals();
+    } else {
+      runLoop();
     }
 
     // start goal manager runner loop
     _timer =
         Timer.periodic(const Duration(milliseconds: 10 * 1000), (timer) async {
-      if (running || DateTime.now().difference(lastRunTime).inSeconds < 10) {
-        return;
-      }
-      if (homeCon.isInSubWindowOrSubPage()) {
-        return;
-      }
-      Log.log.fine(
-          'goal manager running, topicId: ${homeCon.topicId}, currentRoute: ${Get.currentRoute}');
-      running = true;
-      await runOnce();
-      running = false;
-      lastRunTime = DateTime.now();
+      runLoop();
     });
+  }
+
+  runLoop() async {
+    if (running || DateTime.now().difference(lastRunTime).inSeconds < 10) {
+      return;
+    }
+    if (homeCon.isInSubWindowOrSubPage()) {
+      return;
+    }
+    Log.log.fine(
+        'goal manager running, topicId: ${homeCon.topicId}, currentRoute: ${Get.currentRoute}');
+    running = true;
+    await runOnce();
+    running = false;
+    lastRunTime = DateTime.now();
   }
 
   close() {
@@ -80,6 +88,14 @@ class GoalManager extends GetxController {
       return;
     }
     await checkGoals();
+    if (agentData.runningTaskId == 0 && reviewQuizCount < maxReviewQuizCount) {
+      QuizInfo? quizInfo = await agentData.getLatestQuizToReview();
+      if (quizInfo != null) {
+        reviewQuizCount++;
+        Log.log.fine('review quiz: ${quizInfo.taskId}');
+        await showQuizDialog(quizInfo);
+      }
+    }
   }
 
   Future<void> updateTaskStatus(int taskId, TaskStatus status,
@@ -255,11 +271,11 @@ class GoalManager extends GetxController {
     if (showAvatar) {
       Me.defaultSpeaker.talk(inputText);
     }
-    await homeCon.setInSubWindow(true);
+    int index = await homeCon.setInSubWindow(true);
     // sleep 1 second to wait for the sub window to be ready
     await Future.delayed(const Duration(seconds: 1));
     await action.excute();
-    homeCon.setInSubWindow(false);
+    homeCon.setInSubWindow(false, index: index);
     Log.log
         .fine('askUserCommon input:$inputText, output: ${action.act?.output}');
     if (taskId > 0 && action.act != null && action.act!.output.isNotEmpty) {
@@ -339,7 +355,7 @@ Note that this refers to specific tasks, not experiences.
     if (goal.tasks == null || goal.tasks!.isEmpty) {
       return -1;
     }
-    await homeCon.setInSubWindow(true);
+    int index = await homeCon.setInSubWindow(true);
     bool rt = false;
     await showDialog(
         barrierColor: Colors.transparent,
@@ -352,7 +368,7 @@ Note that this refers to specific tasks, not experiences.
               },
             ));
 
-    homeCon.setInSubWindow(false);
+    homeCon.setInSubWindow(false, index: index);
     if (rt) {
       // save tasks to db
       await agentData.saveTasks(goal);
@@ -402,6 +418,11 @@ Note that this refers to specific tasks, not experiences.
           'evaluateTaskByGpt goal or task is null, goal: $goal, task: $task');
       return;
     }
+
+    // evalutateTask Progress = 100%
+    await askGptForTaskProgressEvaluation(goal, task, lastStatus,
+        finished: false, userScore: 100, userEvaluation: evaluate);
+
     // check all tasks of this goal, if all tasks are done, then evaluate the goal
     for (int i = 0; i < goal.tasks.length; i++) {
       SeeTask? t = agentData.tasksMap[goal.tasks[i]];
@@ -464,6 +485,7 @@ Every experience should be short, less than 100 words;
     if (averageScore < 7) {
       action.temperature = 0.9;
     }
+    action.stressLocale = false;
     await action.excute();
     Log.log.fine('askGptForNewExperience output: ${action.act?.output}');
     try {
@@ -607,12 +629,16 @@ Every experience should be short, less than 100 words;
       // addtionMap[AgentPromts.progressActTipsToUser] = recommendKey;
       addtionMap[AgentPromts.progressActTipsToUser] =
           ' (recommended because he is not sitting upright or disappeared)';
-    } else if (questionCount < 1) {
+    }
+    if (questionCount < 1) {
       addtionMap[AgentPromts.progressActNeedSearch] = notRecommendKey;
     } else {
-      if (Random().nextDouble() < 0.3) {
+      if (Random().nextDouble() < 0.2) {
         addtionMap[AgentPromts.progressActNeedSearch] = recommendKey;
       }
+    }
+    if (Random().nextDouble() < 0.8) {
+      addtionMap[AgentPromts.progressActQuiz] = recommendKey;
     }
     for (int i = 0; i < keys.length; i++) {
       if (values.isNotEmpty) {
@@ -625,25 +651,27 @@ Every experience should be short, less than 100 words;
   }
 
   Future<bool> askGptForTaskProgressEvaluation(
-      SeeGoal goal, SeeTask task, MyStatus needRemindSittingThisTime) async {
+    SeeGoal goal,
+    SeeTask task,
+    MyStatus needRemindSittingThisTime, {
+    bool finished = false,
+    int userScore = 0,
+    String userEvaluation = '',
+  }) async {
     GoalState? goalState = await agentData.readStateOfGoal(goal);
     if (goalState == null) {
       Log.log
           .warning('generateNextAction goalState is null, goal: ${goal.name}');
       return false;
     }
-    List<String> questions = await agentData
-        .getLatestQuestionAskByUser(task.startTime ?? task.insertTime);
     List<String> conversations =
-        await agentData.getConversation(goal.id, task.id);
+        await agentData.getAllConversationOfTask(goal.id, task.id);
     String sysPromts =
         AgentPromts.agentPrompts[ActionType.askGptForTaskProgressEvaluation]!;
     List<String> experiencesUsed =
         await agentData.getExperienceWithKeywords(goal.id, [task.keyword]);
-    String reactions = generateProgressEvaluationReactions(
-        questions.length + conversations.length,
-        agentData.getTimeSpentRatio(task),
-        needRemindSittingThisTime);
+    String reactions = generateProgressEvaluationReactions(conversations.length,
+        agentData.getTimeSpentRatio(task), needRemindSittingThisTime);
     if (reactions.isEmpty) {
       Log.log.info(
           'askGptForTaskProgressEvaluation reactions is empty, goal: ${goal.name}, task: ${task.description}');
@@ -659,7 +687,6 @@ Every experience should be short, less than 100 words;
           .difference(task.startTime ?? task.insertTime)
           .inMinutes,
       'conversations': conversations,
-      'minorConversations': questions,
       'experienceUsed': experiencesUsed,
       'envStates': goalState.envStates,
       'outputJsonFormat': reactions,
@@ -667,6 +694,12 @@ Every experience should be short, less than 100 words;
           '''The answer should be brief and output like outputJsonFormat with required "act".
 ''',
     };
+    if (finished) {
+      inputMap['userScore'] = userScore;
+      if (userEvaluation.isNotEmpty) {
+        inputMap['userEvaluation'] = userEvaluation;
+      }
+    }
     if (needRemindSittingThisTime == MyStatus.askew) {
       inputMap['extralInfo'] =
           'In addition to the progress check of the task, he needs to be reminded to sit upright, now he is not sitting well.';
@@ -690,14 +723,13 @@ Every experience should be short, less than 100 words;
     // Perform up to 3 user inquiries or search operations based on the last return, then give the user a prompt
     try {
       String nextInput = '';
+      String splitLine = '\n-----------------\n';
       for (int i = 0; i < 5; i++) {
         gptReplyText = action.outputMap?['text'] ?? '';
         reason = action.outputMap?['reason'] ?? '';
         switch (action.outputMap?['act']) {
           case AgentPromts.progressActNeedMoreInfo:
-            if (gptReplyText.length < 20) {
-              gptReplyText = '$reason\n$gptReplyText';
-            }
+            gptReplyText = '($reason)$splitLine$gptReplyText';
             nextInput = await askUserCommon(goal, gptReplyText,
                 taskId: task.id, showAvatar: true);
             if (nextInput.isEmpty) {
@@ -739,9 +771,7 @@ Every experience should be short, less than 100 words;
             replyOk = true;
             break;
           case AgentPromts.progressActTipsToUser:
-            if (gptReplyText.length < 20) {
-              gptReplyText = '$reason\n$gptReplyText';
-            }
+            gptReplyText = '($reason)$splitLine$gptReplyText';
             if (gptReplyText.isEmpty) {
               Log.log.warning(
                   'try time $i, askGptForTaskProgressEvaluation gptReplyText is empty, ${action.act?.output}');
@@ -794,8 +824,6 @@ Every experience should be short, less than 100 words;
     bool showAvatar = true,
     String text = '',
     String messageId = '',
-    List<String> strings = const [],
-    Map<String, dynamic> map = const {},
     int goalId = 0,
     int taskId = 0,
     bool isQuiz = false,
@@ -808,26 +836,20 @@ Every experience should be short, less than 100 words;
       }
       Me.defaultSpeaker.talk(text, messageId: messageId);
     }
+    QuizInfo? quizInfo;
     if (isQuiz) {
-      text = 'question: $question\n answer: $answer';
+      quizInfo = QuizInfo()
+        ..question = question
+        ..answer = answer
+        ..goalId = goalId
+        ..taskId = taskId;
     }
-    if (goalId > 0 && taskId > 0) {
+    if (goalId > 0 && taskId > 0 && !isQuiz) {
       await agentData.saveConversation(goalId, taskId, text);
     }
-    await homeCon.setInSubWindow(true);
+    int index = await homeCon.setInSubWindow(true);
     if (isQuiz) {
-      await showDialog(
-        barrierColor: Colors.transparent,
-        barrierDismissible: false,
-        context: Get.context!,
-        builder: (_) => AutoBackHome(
-          key: UniqueKey(),
-          child: QuizWidget(
-            question: question,
-            answer: answer,
-          ),
-        ),
-      );
+      await showQuizDialog(quizInfo!);
     } else {
       await showDialog(
         barrierColor: Colors.transparent,
@@ -837,7 +859,110 @@ Every experience should be short, less than 100 words;
             AutoBackHome(key: UniqueKey(), child: TxtShowWidget(text: text)),
       );
     }
-    homeCon.setInSubWindow(false);
+    homeCon.setInSubWindow(false, index: index);
+    return true;
+  }
+
+  Future<void> showQuizDialog(QuizInfo quizInfo) async {
+    await showDialog(
+      barrierColor: Colors.transparent,
+      barrierDismissible: false,
+      context: Get.context!,
+      builder: (_) => AutoBackHome(
+        key: UniqueKey(),
+        child: QuizWidget(
+          quizInfo: quizInfo,
+          markingQuizCallback: markingQuizCallback,
+        ),
+      ),
+    );
+  }
+
+  Future<bool> markingQuizCallback(
+      QuizInfo quizInfo, String userAnswer, bool discard) async {
+    // ask gpt to evaluate the quiz, input is question, answer, userAnswer, score
+    // get goalName, goalDescription, taskDescription,
+    SeeGoal? goal = agentData.goalsMap[quizInfo.goalId];
+    SeeTask? task = agentData.tasksMap[quizInfo.taskId];
+    if (goal == null || task == null) {
+      Log.log.warning(
+          'markingQuizCallback goal or task is null, goalId: ${quizInfo.goalId}, taskId: ${quizInfo.taskId}');
+      return false;
+    }
+
+    if (discard) {
+      Log.log.warning(
+          'markingQuizCallback userAnswer is empty, goalId: ${quizInfo.goalId}, taskId: ${quizInfo.taskId}');
+      await agentData.saveQuiz(quizInfo,
+          userAnswer: userAnswer, score: 0, discard: true);
+      return false;
+    }
+
+    // build input map
+    Map<String, dynamic> inputMap = {
+      'goalName': goal.name,
+      'goalDescription': goal.description,
+      'taskDescription': task.description,
+      'questionFromAssistant': quizInfo.question,
+      'answerFromAssistant': quizInfo.answer,
+      'userAnswer': userAnswer,
+    };
+    String sysPromts =
+        AgentPromts.agentPrompts[ActionType.askGptForMarkingQuiz]!;
+    // construct action
+    MyAction action = MyAction(
+        quizInfo.goalId, quizInfo.taskId, ActionType.askGptForMarkingQuiz, '',
+        inMap: inputMap, sysPrompt: sysPromts);
+    await action.excute();
+    Log.log.info(
+        'markingQuizCallback askGptForMarkingQuiz output: ${action.act?.output}');
+    if (action.act?.output == null) {
+      Log.log.warning(
+          'markingQuizCallback askGptForMarkingQuiz output is null, ${action.act?.output}');
+      return false;
+    }
+
+    int score = -1;
+    String evaluateGpt = '';
+    int nextReviewTimeInDays = 0;
+    try {
+      score = action.outputMap?['score'] ?? -1;
+      evaluateGpt = action.outputMap?['evaluate'] ?? '';
+      nextReviewTimeInDays = action.outputMap?['nextReviewTimeInDays'] ?? 0;
+      if (score < 0 || evaluateGpt.isEmpty || nextReviewTimeInDays < 0) {
+        Log.log.warning(
+            'markingQuizCallback askGptForMarkingQuiz score or evaluateGpt or nextReviewTimeInDays is wrong, ${action.act?.output}');
+        return false;
+      }
+    } catch (e) {
+      Log.log.warning(
+          'markingQuizCallback askGptForMarkingQuiz output is not json, ${action.act?.output}');
+      return false;
+    }
+
+    // save to db
+    await agentData.saveQuiz(quizInfo,
+        userAnswer: userAnswer,
+        score: score,
+        feedback: evaluateGpt,
+        nextReviewTime: nextReviewTimeInDays <= 0
+            ? null
+            : DateTime.now().add(Duration(days: nextReviewTimeInDays)));
+
+    String text = 'QuizResult'.trParams({
+      'question': quizInfo.question,
+      'answer': quizInfo.answer,
+      'userAnswer': userAnswer,
+      'score': score.toString(),
+      'evaluate': evaluateGpt,
+    });
+    await showTextToUser(
+      text: text,
+      goalId: 0,
+      taskId: 0,
+      isQuiz: false,
+      showAvatar: false,
+    );
     return true;
   }
 }

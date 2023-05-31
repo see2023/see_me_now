@@ -17,24 +17,28 @@ class HomeController extends GetxController {
   }
 
   bool inSubWindow = false;
-  Future<void> setInSubWindow(bool value) async {
-    Log.log.fine('in HomeController, inSubWindow changed to $value');
+  int changeIndex = 0;
+  Future<int> setInSubWindow(bool value, {int index = 0}) async {
+    if (index > 0 && index != changeIndex) {
+      return -1;
+    }
+    Log.log.fine(
+        'in HomeController, inSubWindow changed to $value, index: $index, $changeIndex');
+    changeIndex++;
     if (value == true && isInSubWindowOrSubPage()) {
       // go back to home page
       if (inSubWindow || Get.currentRoute != '/home') {
+        inSubWindow = value;
         Get.back();
       } else if (topicId >= 0) {
+        inSubWindow = value;
         setTopicId(-1);
       }
     } else {
+      inSubWindow = value;
       MyApp.refreshHome();
     }
-    if (value == true) {
-      // delay some frames to set inSubWindow to true
-      await Future.delayed(Duration.zero);
-      await Future.delayed(Duration.zero);
-    }
-    inSubWindow = value;
+    return changeIndex;
   }
 
   int topicId = -1;
@@ -119,10 +123,10 @@ class HomePageState extends State<HomePage>
               padding: const EdgeInsets.only(right: 20.0),
               child: GestureDetector(
                 onTap: () async {
-                  await c.setInSubWindow(true);
+                  int index = await c.setInSubWindow(true);
                   setState(() {});
                   await MyApp.goalManager.showGoalsAndTasks();
-                  c.setInSubWindow(false);
+                  c.setInSubWindow(false, index: index);
                 },
                 child: const Icon(Icons.task),
               ),

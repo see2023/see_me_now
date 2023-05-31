@@ -5569,6 +5569,7 @@ const _SeeActiontypeEnumValueMap = {
   'askGptForNewExperience': 13,
   'talkToPerson': 14,
   'getNewPictureFromCamera': 15,
+  'askGptForMarkingQuiz': 16,
 };
 const _SeeActiontypeValueEnumMap = {
   0: ActionType.none,
@@ -5587,6 +5588,7 @@ const _SeeActiontypeValueEnumMap = {
   13: ActionType.askGptForNewExperience,
   14: ActionType.talkToPerson,
   15: ActionType.getNewPictureFromCamera,
+  16: ActionType.askGptForMarkingQuiz,
 };
 
 Id _seeActionGetId(SeeAction object) {
@@ -9026,6 +9028,2383 @@ extension ConversationQueryProperty
   QueryBuilder<Conversation, String, QQueryOperations> textProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'text');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters
+
+extension GetQuizCollection on Isar {
+  IsarCollection<Quiz> get quizs => this.collection();
+}
+
+const QuizSchema = CollectionSchema(
+  name: r'Quiz',
+  id: 3912563531471134748,
+  properties: {
+    r'answer': PropertySchema(
+      id: 0,
+      name: r'answer',
+      type: IsarType.string,
+    ),
+    r'feedback': PropertySchema(
+      id: 1,
+      name: r'feedback',
+      type: IsarType.string,
+    ),
+    r'goalId': PropertySchema(
+      id: 2,
+      name: r'goalId',
+      type: IsarType.long,
+    ),
+    r'historyScores': PropertySchema(
+      id: 3,
+      name: r'historyScores',
+      type: IsarType.longList,
+    ),
+    r'historyTimes': PropertySchema(
+      id: 4,
+      name: r'historyTimes',
+      type: IsarType.dateTimeList,
+    ),
+    r'insertTime': PropertySchema(
+      id: 5,
+      name: r'insertTime',
+      type: IsarType.dateTime,
+    ),
+    r'nextReviewTime': PropertySchema(
+      id: 6,
+      name: r'nextReviewTime',
+      type: IsarType.dateTime,
+    ),
+    r'question': PropertySchema(
+      id: 7,
+      name: r'question',
+      type: IsarType.string,
+    ),
+    r'score': PropertySchema(
+      id: 8,
+      name: r'score',
+      type: IsarType.long,
+    ),
+    r'taskId': PropertySchema(
+      id: 9,
+      name: r'taskId',
+      type: IsarType.long,
+    ),
+    r'userAnswer': PropertySchema(
+      id: 10,
+      name: r'userAnswer',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _quizEstimateSize,
+  serialize: _quizSerialize,
+  deserialize: _quizDeserialize,
+  deserializeProp: _quizDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'goalId': IndexSchema(
+      id: 2738626632585230611,
+      name: r'goalId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'goalId',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'taskId': IndexSchema(
+      id: -6391211041487498726,
+      name: r'taskId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'taskId',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'insertTime': IndexSchema(
+      id: 4224881274084417522,
+      name: r'insertTime',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'insertTime',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'score': IndexSchema(
+      id: -359542572601593437,
+      name: r'score',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'score',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'nextReviewTime': IndexSchema(
+      id: 4028810709021082108,
+      name: r'nextReviewTime',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'nextReviewTime',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _quizGetId,
+  getLinks: _quizGetLinks,
+  attach: _quizAttach,
+  version: '3.0.5',
+);
+
+int _quizEstimateSize(
+  Quiz object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.answer.length * 3;
+  {
+    final value = object.feedback;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.historyScores.length * 8;
+  bytesCount += 3 + object.historyTimes.length * 8;
+  bytesCount += 3 + object.question.length * 3;
+  {
+    final value = object.userAnswer;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  return bytesCount;
+}
+
+void _quizSerialize(
+  Quiz object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.answer);
+  writer.writeString(offsets[1], object.feedback);
+  writer.writeLong(offsets[2], object.goalId);
+  writer.writeLongList(offsets[3], object.historyScores);
+  writer.writeDateTimeList(offsets[4], object.historyTimes);
+  writer.writeDateTime(offsets[5], object.insertTime);
+  writer.writeDateTime(offsets[6], object.nextReviewTime);
+  writer.writeString(offsets[7], object.question);
+  writer.writeLong(offsets[8], object.score);
+  writer.writeLong(offsets[9], object.taskId);
+  writer.writeString(offsets[10], object.userAnswer);
+}
+
+Quiz _quizDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = Quiz();
+  object.answer = reader.readString(offsets[0]);
+  object.feedback = reader.readStringOrNull(offsets[1]);
+  object.goalId = reader.readLong(offsets[2]);
+  object.historyScores = reader.readLongList(offsets[3]) ?? [];
+  object.historyTimes = reader.readDateTimeList(offsets[4]) ?? [];
+  object.id = id;
+  object.insertTime = reader.readDateTime(offsets[5]);
+  object.nextReviewTime = reader.readDateTimeOrNull(offsets[6]);
+  object.question = reader.readString(offsets[7]);
+  object.score = reader.readLong(offsets[8]);
+  object.taskId = reader.readLong(offsets[9]);
+  object.userAnswer = reader.readStringOrNull(offsets[10]);
+  return object;
+}
+
+P _quizDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readLongList(offset) ?? []) as P;
+    case 4:
+      return (reader.readDateTimeList(offset) ?? []) as P;
+    case 5:
+      return (reader.readDateTime(offset)) as P;
+    case 6:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
+      return (reader.readStringOrNull(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _quizGetId(Quiz object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _quizGetLinks(Quiz object) {
+  return [];
+}
+
+void _quizAttach(IsarCollection<dynamic> col, Id id, Quiz object) {
+  object.id = id;
+}
+
+extension QuizQueryWhereSort on QueryBuilder<Quiz, Quiz, QWhere> {
+  QueryBuilder<Quiz, Quiz, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhere> anyGoalId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'goalId'),
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhere> anyTaskId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'taskId'),
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhere> anyInsertTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'insertTime'),
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhere> anyScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'score'),
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhere> anyNextReviewTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'nextReviewTime'),
+      );
+    });
+  }
+}
+
+extension QuizQueryWhere on QueryBuilder<Quiz, Quiz, QWhereClause> {
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> idGreaterThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> idLessThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> goalIdEqualTo(int goalId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'goalId',
+        value: [goalId],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> goalIdNotEqualTo(int goalId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'goalId',
+              lower: [],
+              upper: [goalId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'goalId',
+              lower: [goalId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'goalId',
+              lower: [goalId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'goalId',
+              lower: [],
+              upper: [goalId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> goalIdGreaterThan(
+    int goalId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'goalId',
+        lower: [goalId],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> goalIdLessThan(
+    int goalId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'goalId',
+        lower: [],
+        upper: [goalId],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> goalIdBetween(
+    int lowerGoalId,
+    int upperGoalId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'goalId',
+        lower: [lowerGoalId],
+        includeLower: includeLower,
+        upper: [upperGoalId],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> taskIdEqualTo(int taskId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'taskId',
+        value: [taskId],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> taskIdNotEqualTo(int taskId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'taskId',
+              lower: [],
+              upper: [taskId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'taskId',
+              lower: [taskId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'taskId',
+              lower: [taskId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'taskId',
+              lower: [],
+              upper: [taskId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> taskIdGreaterThan(
+    int taskId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'taskId',
+        lower: [taskId],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> taskIdLessThan(
+    int taskId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'taskId',
+        lower: [],
+        upper: [taskId],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> taskIdBetween(
+    int lowerTaskId,
+    int upperTaskId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'taskId',
+        lower: [lowerTaskId],
+        includeLower: includeLower,
+        upper: [upperTaskId],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> insertTimeEqualTo(
+      DateTime insertTime) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'insertTime',
+        value: [insertTime],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> insertTimeNotEqualTo(
+      DateTime insertTime) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'insertTime',
+              lower: [],
+              upper: [insertTime],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'insertTime',
+              lower: [insertTime],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'insertTime',
+              lower: [insertTime],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'insertTime',
+              lower: [],
+              upper: [insertTime],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> insertTimeGreaterThan(
+    DateTime insertTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'insertTime',
+        lower: [insertTime],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> insertTimeLessThan(
+    DateTime insertTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'insertTime',
+        lower: [],
+        upper: [insertTime],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> insertTimeBetween(
+    DateTime lowerInsertTime,
+    DateTime upperInsertTime, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'insertTime',
+        lower: [lowerInsertTime],
+        includeLower: includeLower,
+        upper: [upperInsertTime],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> scoreEqualTo(int score) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'score',
+        value: [score],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> scoreNotEqualTo(int score) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'score',
+              lower: [],
+              upper: [score],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'score',
+              lower: [score],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'score',
+              lower: [score],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'score',
+              lower: [],
+              upper: [score],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> scoreGreaterThan(
+    int score, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'score',
+        lower: [score],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> scoreLessThan(
+    int score, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'score',
+        lower: [],
+        upper: [score],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> scoreBetween(
+    int lowerScore,
+    int upperScore, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'score',
+        lower: [lowerScore],
+        includeLower: includeLower,
+        upper: [upperScore],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> nextReviewTimeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'nextReviewTime',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> nextReviewTimeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'nextReviewTime',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> nextReviewTimeEqualTo(
+      DateTime? nextReviewTime) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'nextReviewTime',
+        value: [nextReviewTime],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> nextReviewTimeNotEqualTo(
+      DateTime? nextReviewTime) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'nextReviewTime',
+              lower: [],
+              upper: [nextReviewTime],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'nextReviewTime',
+              lower: [nextReviewTime],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'nextReviewTime',
+              lower: [nextReviewTime],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'nextReviewTime',
+              lower: [],
+              upper: [nextReviewTime],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> nextReviewTimeGreaterThan(
+    DateTime? nextReviewTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'nextReviewTime',
+        lower: [nextReviewTime],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> nextReviewTimeLessThan(
+    DateTime? nextReviewTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'nextReviewTime',
+        lower: [],
+        upper: [nextReviewTime],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterWhereClause> nextReviewTimeBetween(
+    DateTime? lowerNextReviewTime,
+    DateTime? upperNextReviewTime, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'nextReviewTime',
+        lower: [lowerNextReviewTime],
+        includeLower: includeLower,
+        upper: [upperNextReviewTime],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension QuizQueryFilter on QueryBuilder<Quiz, Quiz, QFilterCondition> {
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'answer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'answer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'answer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'answer',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'answer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'answer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'answer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerMatches(String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'answer',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'answer',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> answerIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'answer',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'feedback',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'feedback',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'feedback',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'feedback',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'feedback',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'feedback',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'feedback',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'feedback',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'feedback',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'feedback',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'feedback',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> feedbackIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'feedback',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> goalIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'goalId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> goalIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'goalId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> goalIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'goalId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> goalIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'goalId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyScoresElementEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'historyScores',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition>
+      historyScoresElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'historyScores',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyScoresElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'historyScores',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyScoresElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'historyScores',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyScoresLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyScores',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyScoresIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyScores',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyScoresIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyScores',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyScoresLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyScores',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition>
+      historyScoresLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyScores',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyScoresLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyScores',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesElementEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'historyTimes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition>
+      historyTimesElementGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'historyTimes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesElementLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'historyTimes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesElementBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'historyTimes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyTimes',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyTimes',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyTimes',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyTimes',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyTimes',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> historyTimesLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'historyTimes',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> insertTimeEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'insertTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> insertTimeGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'insertTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> insertTimeLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'insertTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> insertTimeBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'insertTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> nextReviewTimeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'nextReviewTime',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> nextReviewTimeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'nextReviewTime',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> nextReviewTimeEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nextReviewTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> nextReviewTimeGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'nextReviewTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> nextReviewTimeLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'nextReviewTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> nextReviewTimeBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'nextReviewTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'question',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'question',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'question',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'question',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'question',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'question',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'question',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'question',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'question',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> questionIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'question',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> scoreEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'score',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> scoreGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'score',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> scoreLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'score',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> scoreBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'score',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> taskIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'taskId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> taskIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'taskId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> taskIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'taskId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> taskIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'taskId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'userAnswer',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'userAnswer',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userAnswer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'userAnswer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'userAnswer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'userAnswer',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'userAnswer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'userAnswer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'userAnswer',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'userAnswer',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userAnswer',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterFilterCondition> userAnswerIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'userAnswer',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension QuizQueryObject on QueryBuilder<Quiz, Quiz, QFilterCondition> {}
+
+extension QuizQueryLinks on QueryBuilder<Quiz, Quiz, QFilterCondition> {}
+
+extension QuizQuerySortBy on QueryBuilder<Quiz, Quiz, QSortBy> {
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByAnswer() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'answer', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByAnswerDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'answer', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByFeedback() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedback', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByFeedbackDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedback', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByGoalId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByGoalIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByInsertTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'insertTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByInsertTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'insertTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByNextReviewTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextReviewTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByNextReviewTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextReviewTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByQuestion() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'question', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByQuestionDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'question', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'score', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByScoreDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'score', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByTaskId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taskId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByTaskIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taskId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByUserAnswer() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userAnswer', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> sortByUserAnswerDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userAnswer', Sort.desc);
+    });
+  }
+}
+
+extension QuizQuerySortThenBy on QueryBuilder<Quiz, Quiz, QSortThenBy> {
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByAnswer() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'answer', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByAnswerDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'answer', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByFeedback() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedback', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByFeedbackDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedback', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByGoalId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByGoalIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'goalId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByInsertTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'insertTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByInsertTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'insertTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByNextReviewTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextReviewTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByNextReviewTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextReviewTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByQuestion() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'question', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByQuestionDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'question', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'score', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByScoreDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'score', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByTaskId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taskId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByTaskIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taskId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByUserAnswer() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userAnswer', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QAfterSortBy> thenByUserAnswerDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userAnswer', Sort.desc);
+    });
+  }
+}
+
+extension QuizQueryWhereDistinct on QueryBuilder<Quiz, Quiz, QDistinct> {
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByAnswer(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'answer', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByFeedback(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'feedback', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByGoalId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'goalId');
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByHistoryScores() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'historyScores');
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByHistoryTimes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'historyTimes');
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByInsertTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'insertTime');
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByNextReviewTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'nextReviewTime');
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByQuestion(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'question', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByScore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'score');
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByTaskId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'taskId');
+    });
+  }
+
+  QueryBuilder<Quiz, Quiz, QDistinct> distinctByUserAnswer(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'userAnswer', caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension QuizQueryProperty on QueryBuilder<Quiz, Quiz, QQueryProperty> {
+  QueryBuilder<Quiz, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Quiz, String, QQueryOperations> answerProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'answer');
+    });
+  }
+
+  QueryBuilder<Quiz, String?, QQueryOperations> feedbackProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'feedback');
+    });
+  }
+
+  QueryBuilder<Quiz, int, QQueryOperations> goalIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'goalId');
+    });
+  }
+
+  QueryBuilder<Quiz, List<int>, QQueryOperations> historyScoresProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'historyScores');
+    });
+  }
+
+  QueryBuilder<Quiz, List<DateTime>, QQueryOperations> historyTimesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'historyTimes');
+    });
+  }
+
+  QueryBuilder<Quiz, DateTime, QQueryOperations> insertTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'insertTime');
+    });
+  }
+
+  QueryBuilder<Quiz, DateTime?, QQueryOperations> nextReviewTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'nextReviewTime');
+    });
+  }
+
+  QueryBuilder<Quiz, String, QQueryOperations> questionProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'question');
+    });
+  }
+
+  QueryBuilder<Quiz, int, QQueryOperations> scoreProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'score');
+    });
+  }
+
+  QueryBuilder<Quiz, int, QQueryOperations> taskIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'taskId');
+    });
+  }
+
+  QueryBuilder<Quiz, String?, QQueryOperations> userAnswerProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'userAnswer');
     });
   }
 }

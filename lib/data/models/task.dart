@@ -23,6 +23,7 @@ enum ActionType {
   askGptForNewExperience,
   talkToPerson,
   getNewPictureFromCamera,
+  askGptForMarkingQuiz,
 }
 
 enum StateKey { none, appear, upright, smile }
@@ -160,4 +161,31 @@ class Conversation {
   String from = 'AI';
 
   String text = '';
+}
+
+@collection
+class Quiz {
+  Id id = Isar.autoIncrement;
+
+  @Index()
+  int goalId = 0;
+
+  @Index()
+  int taskId = 0;
+
+  @Index()
+  DateTime insertTime = DateTime.now();
+  String question = '';
+  String answer = '';
+
+  @Index()
+  int score = 0;
+  @Index()
+  DateTime? nextReviewTime;
+
+  String? userAnswer;
+  String? feedback;
+
+  List<int> historyScores = [];
+  List<DateTime> historyTimes = [];
 }

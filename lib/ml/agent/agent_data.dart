@@ -117,6 +117,19 @@ class GoalState {
   }
 }
 
+class SimpleMsg {
+  String? msg = '';
+  DateTime? time = DateTime.now();
+}
+
+class QuizInfo {
+  int id = 0;
+  int goalId = 0;
+  int taskId = 0;
+  String question = '';
+  String answer = '';
+}
+
 class AgentData {
   static const String conversationIdUser = 'user';
   static const String conversationIdAssistant = 'assistant';
@@ -126,6 +139,7 @@ class AgentData {
   List<int> orderedGoals = [];
   Map<int, SeeGoal> goalsMap = {};
   Map<int, SeeTask> tasksMap = {};
+  int maxWords = 150;
 
   static Future<SeeGoal> newGoal(
       String name,
@@ -587,10 +601,9 @@ class AgentData {
     }
   }
 
-  Future<List<String>> getLatestQuestionAskByUser(DateTime startTime,
+  Future<List<SimpleMsg>> getLatestQuestionAskByUser(DateTime startTime,
       {int num = 4}) async {
     // It's from messages, unlike conversion
-    List<String> questions = [];
     List<Message> messages = await DB.isar?.messages
             .where()
             .createdAtGreaterThan(startTime)
@@ -601,20 +614,25 @@ class AgentData {
             .findAll() ??
         [];
 
+    List<SimpleMsg> simpleMsgs = [];
     for (int i = messages.length - 1; i >= 0; i--) {
+      String msg = '';
       if (messages[i].author == SettingValueConstants.me) {
-        questions.add('${AgentData.conversationIdUser}: ${messages[i].text}');
+        msg = '${AgentData.conversationIdUser}: ${messages[i].text}';
       } else {
         // Only the full question is returned, the answer cut to 32 characters
         String msg = messages[i].text;
-        if (msg.length > 32) {
-          msg = '${msg.substring(0, 32)}...';
+        if (msg.length > maxWords) {
+          msg = '${msg.substring(0, maxWords)}...';
         }
-        questions.add('${AgentData.conversationIdAssistant}: $msg');
+        msg = '${AgentData.conversationIdAssistant}: $msg';
       }
+      simpleMsgs.add(SimpleMsg()
+        ..msg = msg
+        ..time = messages[i].createdAt);
     }
 
-    return questions;
+    return simpleMsgs;
   }
 
   Future<bool> saveConversation(int goalId, int taskId, String text,
@@ -638,40 +656,226 @@ class AgentData {
   }
 
   // get tips of this goal and this task
-  Future<List<String>> getConversation(int goalId, int taskId,
+  Future<List<SimpleMsg>> getConversation(int goalId, int taskId,
       {int num = 6}) async {
-    List<Conversation> tips = await DB.isar?.conversations
+    List<Conversation>? tips;
+    if (taskId == 0) {
+      tips = await DB.isar?.conversations
+              .where()
+              .goalIdEqualTo(goalId)
+              .sortByInsertTimeDesc()
+              .limit(num)
+              .findAll() ??
+          [];
+    } else {
+      tips = await DB.isar?.conversations
+              .where()
+              .goalIdEqualTo(goalId)
+              .filter()
+              .taskIdEqualTo(taskId)
+              .sortByInsertTimeDesc()
+              .limit(num)
+              .findAll() ??
+          [];
+    }
+    tips = tips.reversed.toList();
+
+    List<SimpleMsg> texts = [];
+    for (Conversation tip in tips) {
+      String msg = tip.text;
+      if (msg.length > maxWords) {
+        msg = '${msg.substring(0, maxWords)}...';
+      }
+      texts.add(SimpleMsg()
+        ..msg = msg
+        ..time = tip.insertTime);
+    }
+    return texts;
+  }
+
+  Future<bool> saveQuiz(QuizInfo quizInfo,
+      {String? userAnswer,
+      int score = 0,
+      String? feedback,
+      DateTime? nextReviewTime,
+      bool discard = false}) async {
+    if (quizInfo.question.length > maxWords) {
+      quizInfo.question = quizInfo.question.substring(0, maxWords);
+    }
+    if (quizInfo.answer.length > maxWords) {
+      quizInfo.answer = quizInfo.answer.substring(0, maxWords);
+    }
+    if (userAnswer != null && userAnswer.length > maxWords) {
+      userAnswer = userAnswer.substring(0, maxWords);
+    }
+    if (feedback != null && feedback.length > maxWords) {
+      feedback = feedback.substring(0, maxWords);
+    }
+    try {
+      await DB.isar?.writeTxn(() async {
+        if (quizInfo.id > 0) {
+          Quiz? oldQuiz = await DB.isar?.quizs.get(quizInfo.id);
+          if (oldQuiz != null) {
+            oldQuiz.historyTimes.add(oldQuiz.insertTime);
+            oldQuiz.insertTime = DateTime.now();
+            if (userAnswer != null) {
+              oldQuiz.userAnswer = userAnswer;
+            }
+            if (score > 0) {
+              oldQuiz.score = score;
+              oldQuiz.historyScores.add(score);
+            }
+            if (feedback != null) {
+              oldQuiz.feedback = feedback;
+            }
+            if (discard) {
+              oldQuiz.nextReviewTime = null;
+            } else if (nextReviewTime != null) {
+              if (oldQuiz.historyScores.length >= AgentPromts.maxReviewCount) {
+                nextReviewTime = null;
+              }
+              oldQuiz.nextReviewTime = nextReviewTime;
+            }
+            await DB.isar?.quizs.put(oldQuiz);
+            Log.log.info('saveQuiz: quizId ${quizInfo.id} updated');
+          } else {
+            Log.log.warning('saveQuiz error: quizId ${quizInfo.id} not found');
+            return false;
+          }
+        } else {
+          if (discard) {
+            nextReviewTime = null;
+          }
+          await DB.isar?.quizs.put(Quiz()
+            ..goalId = quizInfo.goalId
+            ..taskId = quizInfo.taskId
+            ..question = quizInfo.question
+            ..answer = quizInfo.answer
+            ..userAnswer = userAnswer
+            ..score = score
+            ..feedback = feedback
+            ..nextReviewTime = nextReviewTime);
+        }
+        Log.log.info('saveQuiz: new quiz saved');
+      });
+      return true;
+    } catch (e) {
+      Log.log.warning('saveQuiz error: $e');
+      return false;
+    }
+  }
+
+  Future<Quiz> getQuiz(int quizId) async {
+    Quiz? quiz = await DB.isar?.quizs.get(quizId);
+    if (quiz == null) {
+      Log.log.warning('getQuiz error: quizId $quizId not found');
+      return Quiz();
+    }
+    return quiz;
+  }
+
+  Future<List<SimpleMsg>> getQuizs(int goalId, int taskId,
+      {int num = 6}) async {
+    List<Quiz>? quizs;
+    if (taskId > 0) {
+      quizs = await DB.isar?.quizs
+              .where()
+              .goalIdEqualTo(goalId)
+              .filter()
+              .taskIdEqualTo(taskId)
+              .sortByInsertTimeDesc()
+              .limit(num)
+              .findAll() ??
+          [];
+    } else {
+      quizs = await DB.isar?.quizs
+              .where()
+              .goalIdEqualTo(goalId)
+              .sortByInsertTimeDesc()
+              .limit(num)
+              .findAll() ??
+          [];
+    }
+    quizs = quizs.reversed.toList();
+    List<SimpleMsg> msgs = [];
+    for (Quiz quiz in quizs) {
+      if (quiz.userAnswer != null && quiz.userAnswer!.isNotEmpty) {
+        String question = quiz.question;
+        if (question.length > maxWords) {
+          question = question.substring(0, maxWords);
+        }
+        String answer = quiz.answer;
+        if (answer.length > maxWords) {
+          answer = answer.substring(0, maxWords);
+        }
+        String userAnswer = quiz.userAnswer ?? '';
+        if (userAnswer.length > maxWords) {
+          userAnswer = userAnswer.substring(0, maxWords);
+        }
+        String feedback = quiz.feedback ?? '';
+        if (feedback.length > maxWords) {
+          feedback = feedback.substring(0, maxWords);
+        }
+        msgs.add(SimpleMsg()
+          ..msg = 'questionFromAssistant: $question\n'
+              'answerFromAssistant: $answer\n'
+              'userAnswer: $userAnswer\n'
+              'score: ${quiz.score}\n'
+              'feedback: $feedback'
+          ..time = quiz.insertTime);
+      }
+    }
+    return msgs;
+  }
+
+  Future<QuizInfo?> getLatestQuizToReview() async {
+    List<Quiz>? quizs = await DB.isar?.quizs
             .where()
-            .goalIdEqualTo(goalId)
-            .filter()
-            .taskIdEqualTo(taskId)
-            .sortByInsertTime()
-            .limit(num)
+            .nextReviewTimeIsNotNull()
+            .sortByNextReviewTimeDesc()
+            .limit(1)
             .findAll() ??
         [];
+    if (quizs.isNotEmpty) {
+      return QuizInfo()
+        ..id = quizs[0].id
+        ..goalId = quizs[0].goalId
+        ..taskId = quizs[0].taskId
+        ..question = quizs[0].question
+        ..answer = quizs[0].answer;
+    } else {
+      return null;
+    }
+  }
 
+  List<String> sortMsgs(List<SimpleMsg> msgs) {
     List<String> texts = [];
-    for (Conversation tip in tips) {
-      texts.add('${tip.from}: ${tip.text}');
+    msgs.sort((a, b) => a.time!.compareTo(b.time!));
+    for (SimpleMsg msg in msgs) {
+      if (msg.msg != null && msg.msg!.isNotEmpty) {
+        texts.add(msg.msg!);
+      }
     }
     return texts;
   }
 
   Future<List<String>> getConversationOfGoal(int goalId, {int num = 6}) async {
-    List<Conversation> tips = await DB.isar?.conversations
-            .where()
-            .goalIdEqualTo(goalId)
-            .sortByInsertTimeDesc()
-            .limit(num)
-            .findAll() ??
-        [];
+    List<SimpleMsg> msgs = await getConversation(goalId, 0, num: num);
+    List<SimpleMsg> msgs2 = await getQuizs(goalId, 0, num: num);
+    msgs.addAll(msgs2);
+    return sortMsgs(msgs);
+  }
 
-    List<String> texts = [];
-    for (Conversation tip in tips) {
-      texts.add('${tip.from}: ${tip.text}');
+  Future<List<String>> getAllConversationOfTask(int goalId, int taskId) async {
+    List<SimpleMsg> msgs = await getConversation(goalId, taskId);
+    List<SimpleMsg> msgs2 = await getQuizs(goalId, taskId);
+    msgs.addAll(msgs2);
+    SeeTask? task = tasksMap[taskId];
+    if (task != null) {
+      List<SimpleMsg> msgs3 =
+          await getLatestQuestionAskByUser(task.startTime ?? task.insertTime);
+      msgs.addAll(msgs3);
     }
-    //reverse
-    texts = texts.reversed.toList();
-    return texts;
+    return sortMsgs(msgs);
   }
 }

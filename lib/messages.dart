@@ -11,6 +11,7 @@ class Messages extends Translations {
           'SportAndRelax': 'Sports and relaxation',
           'ReplyLanguage': 'Please reply in English.',
           'ShowAnswer': 'Show answer',
+          'MyAnswer': 'My answer',
           'UserProfile': 'Profile',
           'UserNickname': 'nickname',
           'UserDescription': 'description',
@@ -31,6 +32,9 @@ class Messages extends Translations {
           'Animation': 'Animation',
           'AIReplyWithMotion': 'AI Motion',
           'Evaluation': 'Evaluation',
+          'QuizResult':
+              'question: @question\n\nanswer: @answer\n\nyour answer: @userAnswer\n\nscore: @score\n\nevaluate: @evaluate',
+          'Discard': 'Discard',
         },
         'zh_CN': {
           'askUserForTasks': '你今天有什么 @name 的计划吗?',
@@ -40,6 +44,7 @@ class Messages extends Translations {
           'SportAndRelax': '运动与放松',
           'ReplyLanguage': 'Please reply in Chinese.',
           'ShowAnswer': '显示答案',
+          'MyAnswer': '我的答案',
           'UserProfile': '个人资料',
           'UserNickname': '昵称',
           'UserDescription': '描述',
@@ -60,6 +65,9 @@ class Messages extends Translations {
           'Animation': '动画',
           'AIReplyWithMotion': 'AI动作',
           'Evaluation': '评价',
+          'QuizResult':
+              '问题: @question\n\n答案: @answer\n\n你的答案: @userAnswer\n\n分数: @score\n\n评价: @evaluate',
+          'Discard': '废弃',
         },
       };
 }

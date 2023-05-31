@@ -23,6 +23,7 @@ class MyAction {
   String sysPromptText = '';
   String outputJsonFormat = '';
   String parentMessageId = '';
+  bool stressLocale = true;
   Map<String, dynamic>? outputMap;
   MyAction(int goalId, int taskId, ActionType type, String input,
       {String sysPrompt = '',
@@ -78,7 +79,12 @@ class MyAction {
     } else {
       prompts = act!.input;
     }
-    String langAndFormat = '\n${DB.getFirstPromt()}\n${AgentPromts.askForJson}';
+    String langAndFormat = '';
+    if (stressLocale) {
+      langAndFormat = '\n${DB.getFirstPromt()}\n${AgentPromts.askForJson}';
+    } else {
+      langAndFormat = '\n${AgentPromts.askForJson}';
+    }
     prompts += langAndFormat;
     for (var i = 0; i < 2; i++) {
       try {
@@ -178,6 +184,7 @@ class MyAction {
       case ActionType.askGptForCreateTask:
       case ActionType.askGptForNewExperience:
       case ActionType.askGptForTaskProgressEvaluation:
+      case ActionType.askGptForMarkingQuiz:
         act?.cost = MyAction.gptCost.toDouble();
         await askGptInJson(sysPromptText, inputMap!);
         break;

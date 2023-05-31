@@ -1,6 +1,7 @@
 // show simple text content in String, List<String>, or Json format.
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:see_me_now/ml/agent/agent_data.dart';
 
 class AwsomeText extends StatelessWidget {
   // make the text looks better
@@ -72,9 +73,11 @@ class TxtShowWidget extends StatelessWidget {
 // show quiz (question and answer)
 // with a button click to show answer
 class QuizWidget extends StatefulWidget {
-  final String? question;
-  final String? answer;
-  const QuizWidget({Key? key, this.question, this.answer}) : super(key: key);
+  final QuizInfo? quizInfo;
+  final Future<bool> Function(QuizInfo, String, bool) markingQuizCallback;
+  const QuizWidget(
+      {Key? key, required this.quizInfo, required this.markingQuizCallback})
+      : super(key: key);
 
   @override
   State<QuizWidget> createState() => _QuizWidgetState();
@@ -82,6 +85,7 @@ class QuizWidget extends StatefulWidget {
 
 class _QuizWidgetState extends State<QuizWidget> {
   bool showAnswer = false;
+  String userAnswer = '';
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -95,10 +99,23 @@ class _QuizWidgetState extends State<QuizWidget> {
                 const EdgeInsets.only(top: 95, left: 10, right: 5, bottom: 20),
             child: Column(
               children: [
-                AwsomeText(text: widget.question),
+                AwsomeText(text: widget.quizInfo!.question),
                 const SizedBox(height: 20),
+                TextField(
+                  maxLines: null,
+                  enabled: !showAnswer,
+                  onChanged: (value) {
+                    userAnswer = value;
+                  },
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: 'MyAnswer'.tr,
+                  ),
+                ),
+
+                // show answer
                 showAnswer
-                    ? AwsomeText(text: widget.answer)
+                    ? AwsomeText(text: widget.quizInfo!.answer)
                     : ElevatedButton(
                         onPressed: () {
                           setState(() {
@@ -113,14 +130,26 @@ class _QuizWidgetState extends State<QuizWidget> {
           Positioned(
             top: 50,
             left: 0,
-            child: IconButton(
-              icon: const Icon(Icons.close),
-              color: Colors.white70,
-              iconSize: 36,
-              onPressed: () {
-                Get.back();
-              },
-            ),
+            // showAnswer==true时显示done，否则显示废弃按钮
+            child: showAnswer
+                ? IconButton(
+                    icon: const Icon(Icons.done),
+                    color: Colors.white70,
+                    iconSize: 36,
+                    onPressed: () {
+                      widget.markingQuizCallback(
+                          widget.quizInfo!, userAnswer, false);
+                      Get.back();
+                    },
+                  )
+                : // show an delete button with text, not iconbutton
+                TextButton(
+                    onPressed: () {
+                      widget.markingQuizCallback(widget.quizInfo!, '', true);
+                      Get.back();
+                    },
+                    child: Text('Discard'.tr),
+                  ),
           ),
         ]),
       ),

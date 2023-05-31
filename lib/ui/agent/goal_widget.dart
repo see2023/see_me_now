@@ -99,15 +99,14 @@ class _SimpleGoalWidgetState extends State<SimpleGoalWidget> {
                                     maxLines: null,
                                     textAlign: TextAlign.left,
                                     controller: TextEditingController(
-                                        text:
-                                            '${taskInfo.description}(${taskInfo.keyword})'),
+                                        text: taskInfo.description),
                                     onChanged: (value) {
-                                      setState(() {
-                                        widget.goal?.tasks?[index - 1]
-                                            .description = value;
-                                      });
+                                      widget.goal?.tasks?[index - 1]
+                                          .description = value;
                                     },
                                   ),
+                                  // show taskInfo.keyword
+                                  Text(taskInfo.keyword),
                                 ],
                               ),
                             ),
@@ -122,16 +121,14 @@ class _SimpleGoalWidgetState extends State<SimpleGoalWidget> {
                                             .toString() ??
                                         ''),
                                 onChanged: (value) {
-                                  setState(() {
-                                    int timeInMinutes = 0;
-                                    try {
-                                      timeInMinutes = int.parse(value);
-                                    } catch (e) {
-                                      timeInMinutes = 0;
-                                    }
-                                    widget.goal?.tasks?[index - 1]
-                                        .estimatedTimeInMinutes = timeInMinutes;
-                                  });
+                                  int timeInMinutes = 0;
+                                  try {
+                                    timeInMinutes = int.parse(value);
+                                  } catch (e) {
+                                    timeInMinutes = 0;
+                                  }
+                                  widget.goal?.tasks?[index - 1]
+                                      .estimatedTimeInMinutes = timeInMinutes;
                                 },
                               ),
                             ),
@@ -408,7 +405,7 @@ class _GoalWidgetState extends State<GoalWidget> {
                                                           TaskStatus.suspended);
                                                   setState(() {});
                                                 },
-                                                icon: const Icon(Icons.stop),
+                                                icon: const Icon(Icons.pause),
                                               ),
                                             )
                                           // show cancel button

@@ -5,6 +5,9 @@ int getTimeSpentInMinutes(SeeTask task) {
   if (task.startTime == null) {
     return task.consumedSeconds! ~/ 60;
   }
+  if (task.status != TaskStatus.running) {
+    return task.consumedSeconds! ~/ 60;
+  }
   DateTime endTime = task.endTime ?? DateTime.now();
   if (task.status == TaskStatus.running) {
     endTime = DateTime.now();

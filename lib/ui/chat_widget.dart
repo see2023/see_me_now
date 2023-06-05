@@ -11,6 +11,7 @@ import 'package:see_me_now/data/models/topic.dart';
 import 'package:see_me_now/main.dart';
 import 'package:see_me_now/data/db.dart';
 import 'package:see_me_now/data/log.dart';
+import 'package:see_me_now/ml/agent/agent_prompts.dart';
 import 'package:see_me_now/tools/voice_assistant.dart';
 import 'package:see_me_now/ui/home_page.dart';
 
@@ -206,20 +207,22 @@ class _ChatWidgetState extends State<ChatWidget> {
 
     await processMessage(textMessage);
     ChatGPTResWithMotion? res;
+    String sysPrompt = DB.promptsMap[_promptIdUsed]?.text ?? '';
+    sysPrompt = '${AgentPromts.gptPromptPrefix}\n$sysPrompt';
     if (DB.setting.enableAIReplyWithMotion) {
       res = await DB.chatGPTProxy.sendMessgeRequiresMotion(
           textMessage.text,
           _apis[0].parentMessageId ?? '',
           // _apis[0].model ?? '', // only one api now ...
           DB.promptsMap[_promptIdUsed]?.model ?? '',
-          DB.promptsMap[_promptIdUsed]?.text ?? '');
+          sysPrompt);
     } else {
       ChatGPTRes resRaw = await DB.chatGPTProxy.sendMessage(
           textMessage.text,
           _apis[0].parentMessageId ?? '',
           // _apis[0].model ?? '', // only one api now ...
           DB.promptsMap[_promptIdUsed]?.model ?? '',
-          DB.promptsMap[_promptIdUsed]?.text ?? '');
+          sysPrompt);
       res = ChatGPTResWithMotion()
         ..status = resRaw.status
         ..text = resRaw.text

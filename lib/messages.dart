@@ -37,7 +37,7 @@ class Messages extends Translations {
           'Discard': 'Discard',
         },
         'zh_CN': {
-          'askUserForTasks': '你今天有什么 @name 的计划吗?',
+          'askUserForTasks': '你今天有什么@name的计划吗?',
           'MathHomework': '数学作业',
           'EnglishHomework': '英语作业',
           'ChineseHomework': '语文作业',

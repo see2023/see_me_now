@@ -130,7 +130,6 @@ class _QuizWidgetState extends State<QuizWidget> {
           Positioned(
             top: 50,
             left: 0,
-            // showAnswer==true时显示done，否则显示废弃按钮
             child: showAnswer
                 ? IconButton(
                     icon: const Icon(Icons.done),

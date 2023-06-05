@@ -30,9 +30,12 @@ Each time you will receive a JSON input, analyze the goal and current situation,
   static String gptPromptPrefixJson = gptPromptPrefixInit;
   static String gptPromptPrefix = '';
   static changeGptPromptPrefix(String userNickName, String userDescription) {
+    String currentYearAndMonth = DateTime.now().toString().substring(0, 7);
     if (userNickName.isNotEmpty && userDescription.isNotEmpty) {
       gptPromptPrefix =
-          'You are talking to $userDescription, you can call him/her $userNickName.';
+          '''Please note that your knowledge is updated until 2021-09, it is now $currentYearAndMonth.
+You are talking to $userDescription, you can call him/her $userNickName.''';
+
       gptPromptPrefixJson = '''$gptPromptPrefix
  $gptPromptPrefixInit''';
     }

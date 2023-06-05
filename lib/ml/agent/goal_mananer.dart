@@ -92,7 +92,7 @@ class GoalManager extends GetxController {
       QuizInfo? quizInfo = await agentData.getLatestQuizToReview();
       if (quizInfo != null) {
         reviewQuizCount++;
-        Log.log.fine('review quiz: ${quizInfo.taskId}');
+        Log.log.fine('review quiz: ${quizInfo.id}');
         await showQuizDialog(quizInfo);
       }
     }
@@ -847,10 +847,10 @@ Every experience should be short, less than 100 words;
     if (goalId > 0 && taskId > 0 && !isQuiz) {
       await agentData.saveConversation(goalId, taskId, text);
     }
-    int index = await homeCon.setInSubWindow(true);
     if (isQuiz) {
       await showQuizDialog(quizInfo!);
     } else {
+      int index = await homeCon.setInSubWindow(true);
       await showDialog(
         barrierColor: Colors.transparent,
         barrierDismissible: false,
@@ -858,17 +858,19 @@ Every experience should be short, less than 100 words;
         builder: (_) =>
             AutoBackHome(key: UniqueKey(), child: TxtShowWidget(text: text)),
       );
+      homeCon.setInSubWindow(false, index: index);
     }
-    homeCon.setInSubWindow(false, index: index);
     return true;
   }
 
   Future<void> showQuizDialog(QuizInfo quizInfo) async {
+    int index = await homeCon.setInSubWindow(true);
     await showDialog(
       barrierColor: Colors.transparent,
       barrierDismissible: false,
       context: Get.context!,
       builder: (_) => AutoBackHome(
+        duration: const Duration(minutes: 5),
         key: UniqueKey(),
         child: QuizWidget(
           quizInfo: quizInfo,
@@ -876,25 +878,26 @@ Every experience should be short, less than 100 words;
         ),
       ),
     );
+    homeCon.setInSubWindow(false, index: index);
   }
 
   Future<bool> markingQuizCallback(
       QuizInfo quizInfo, String userAnswer, bool discard) async {
     // ask gpt to evaluate the quiz, input is question, answer, userAnswer, score
+    if (discard) {
+      Log.log.warning(
+          'markingQuizCallback userAnswer is empty, goalId: ${quizInfo.goalId}, taskId: ${quizInfo.taskId}');
+      await agentData.saveQuiz(quizInfo,
+          userAnswer: userAnswer, score: 0, discard: true);
+      return false;
+    }
+
     // get goalName, goalDescription, taskDescription,
     SeeGoal? goal = agentData.goalsMap[quizInfo.goalId];
     SeeTask? task = agentData.tasksMap[quizInfo.taskId];
     if (goal == null || task == null) {
       Log.log.warning(
           'markingQuizCallback goal or task is null, goalId: ${quizInfo.goalId}, taskId: ${quizInfo.taskId}');
-      return false;
-    }
-
-    if (discard) {
-      Log.log.warning(
-          'markingQuizCallback userAnswer is empty, goalId: ${quizInfo.goalId}, taskId: ${quizInfo.taskId}');
-      await agentData.saveQuiz(quizInfo,
-          userAnswer: userAnswer, score: 0, discard: true);
       return false;
     }
 

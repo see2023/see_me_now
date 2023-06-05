@@ -832,6 +832,8 @@ class AgentData {
     List<Quiz>? quizs = await DB.isar?.quizs
             .where()
             .nextReviewTimeIsNotNull()
+            .filter()
+            .nextReviewTimeLessThan(DateTime.now())
             .sortByNextReviewTimeDesc()
             .limit(1)
             .findAll() ??
